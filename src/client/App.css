@@ -1,0 +1,246 @@
+@font-face {
+  font-family: roboto;
+  src: url("/src/fonts/roboto.ttf");
+
+}
+
+:root {
+  --top-color: royalblue;
+  --font-color: black;
+  --font-color-into-base-color: white;
+  --bg-color: white;
+  --nav-size: 300px;
+  --bg-input-color: #88888830;
+  --fg-input-color: black;
+
+
+}
+
+* {
+  padding: 0px;
+  margin: 0px;
+  box-sizing: border-box;
+  font-family: roboto;
+
+}
+
+
+.marco {
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.center, .medio {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow: auto;
+}
+
+
+
+
+
+
+.navlink-base {
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+  background-color: var(--bg-color);
+  color: var(--font-color);
+  margin-top: 20px;
+
+  transition: .4s;
+
+  width: calc(100% - 20px);
+  height: 60px;
+
+  display: block;
+
+  ._icon {
+    background-position: center;
+    background-size: 60%;
+    background-repeat: no-repeat;
+    width: 60px;
+    height: 60px;
+    float: left;
+    transition: .4s
+  }
+
+  ._caption {
+    height: 60px;
+    width: calc(100% - 60px);
+    font-size: 20px;
+    /* font-weight: bold; */
+    text-align: left;
+    float: left;
+
+    display: flex;
+    align-items: center;
+  }
+}
+
+.navlink-base:hover, .nav-active .navlink-base {
+  background-color: var(--top-color);
+  color: var(--font-color-into-base-color);
+  box-shadow: 0px 0px 20px gray;
+
+  ._icon {
+    filter: invert(1);  
+  }
+}
+
+
+.nav-control {
+  height: 100%;
+  width: var(--nav-size);
+  /* background-color: #88888830; */
+  float: left;
+  
+}
+
+.body-content {
+  height: 100%;
+  width: calc(100% - var(--nav-size));
+  float: left;
+  overflow: auto;
+}
+
+._row-table-antd {
+  background-color: var(--bg-color);
+  color: var(--font-color);
+  cursor: pointer;
+  transition: .4s;
+}
+
+._row-table-antd.active,
+._row-table-antd:hover {
+  background-color: var(--top-color) !important;
+  color: var(--font-color-into-base-color);
+}
+
+._row-table-antd > .ant-table-cell {
+  background-color: transparent !important;
+}
+
+.ant-table {
+  overflow: hidden !important;
+  box-shadow: 0px 0px 20px gray;
+  border-radius: 20px !important;
+
+
+}
+
+/* .table-container, */
+.top-control, .login-box, .simple-box  {
+  margin: 20px;
+  /* background-color: #88888830; */
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0px 0px 20px gray;
+  padding: 20px;
+  /* display: flex; */
+}
+
+.center-text {
+  text-align: center;
+}
+
+.login-box, .simple-box {
+  max-width: 400px;
+  width: calc(100% - 40px);
+  height: max-content;
+}
+
+.table-container {
+  margin: 20px;
+}
+
+
+._input::before {
+  content: attr("title");
+  width: max-content;
+  height: max-content;
+  /* transform: ; */
+
+
+}
+
+
+._input {
+  width: 100%;
+  /* height: 20px; */
+  font-size: 16px;
+  padding: 12px;
+  border-radius: 20px;
+  outline: none;
+  border: solid gray 1px;
+  margin: 10px 0px;
+  background-color: var(--bg-input-color);
+  color: var(--fg-input-color);
+
+
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+input._input:read-only {
+  color: gray;
+}
+
+._input._required {
+  background-color: rgb(255, 202, 213);
+  color: crimson;
+  border: solid crimson 1px;
+
+}
+
+.title-page {
+  padding-left: 10px;
+  margin-bottom: 10px;
+  color: rgb(58, 58, 58);
+  /* border-bottom: solid 1px gray; */
+  padding-bottom: 10px;
+}
+
+._submit {
+  /* width: 100%; */
+  /* height: 20px; */
+  font-size: 16px;
+  padding: 20px;
+  border-radius: 20px;
+  outline: none;
+  border: none;
+  margin: 10px 0px;
+  background-color: var(--bg-input-color);
+  color: var(--fg-input-color);
+  cursor: pointer;
+  margin-right: 10px;
+  border: solid gray 1px;
+  /* float: right; */
+  transition: .4s;
+
+}
+
+._submit:hover {
+  background-color: var(--top-color);
+  color: var(--font-color-into-base-color);
+  border-color: var(--top-color);
+}
+
+._submit.red:hover {
+  background-color: crimson;
+  border-color: crimson;
+  color: white;
+}
