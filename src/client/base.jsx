@@ -1,4 +1,5 @@
 import { message } from "antd";
+import { Component } from "react";
 
 let go = (a) => document.getElementById(a);
 
@@ -45,6 +46,36 @@ let msg = {
 }
 
 
+
+let CONVERSION = {
+    VES: "ves",
+    USD: "usd",
+    EUR: "eur",
+    divisa_value:{
+        ves: 1,
+        usd: 58,
+        eur: 63,
+    }
+}
+
+function MDP(name, format, divisa) {
+    return {
+        name, format, divisa
+    }
+}
+
+let METODOSDEPAGO = [
+    MDP("Bolivares (Efectivo)", "Bs. {n}", CONVERSION.VES),
+    MDP("Bolivares (Punto de venta)", "Bs. {n}", CONVERSION.VES),
+    MDP("Bolivares (Pago Movil)", "Bs. {n}", CONVERSION.VES),
+    MDP("Bolivares (Transferencia)", "Bs. {n}", CONVERSION.VES),
+    MDP("Divisas (Efectivo USD)", "{n} $USD", CONVERSION.USD),
+    MDP("Divisas (Transferencia Binance/Wallet)", "{n} $USDT", CONVERSION.USD),
+    MDP("Divisas (Efectivo EUR)", "{n} €", CONVERSION.EUR),
+
+    
+].map((x,i)=>({...x, key:i}))
+
 function np_validar(cond, obj=go(""), _required_class, message_required) {
 
     if (cond) {
@@ -54,7 +85,7 @@ function np_validar(cond, obj=go(""), _required_class, message_required) {
         obj.classList.remove(_required_class)
     }
 
-    return cond
+    return Boolean(cond)
 }
 
 
@@ -65,6 +96,12 @@ let METHODS = {
     loadAll:"LOADALL",
     create:"CREATE"
     
+}
+
+function debug_log(p) {
+    console.log(p);
+
+    return p
 }
 
 let reqDB = {
@@ -147,6 +184,26 @@ let reqDB = {
     }
 }
 
+let splash = {
+    content: <div className="medio container" style={{color: "gray", cursor:"default", fontSize:"30px", fontWeight:"bold"}}>Sin contenido</div>,
+    open:(content) => {
+        go("_splash").style.display = "flex"
+        splash.content = <div></div>
+        splash.root.setState({}, () => {
+            
+            splash.content = content||splash.content;
+            splash.root.setState({})
+        })
+    },
+    close:() => {
+        go("_splash").style.display = "none"
+
+    },
+    root: Component.prototype
+}
+
+
+
 window.login = reqDB.login;
 
 export {
@@ -154,5 +211,9 @@ export {
     range,
     msg,
     np_validar,
-    reqDB
+    reqDB,
+    debug_log,
+    splash,
+    METODOSDEPAGO,
+    CONVERSION
 }

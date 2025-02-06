@@ -1,5 +1,5 @@
 import fs from "fs";
-import {Users, Productos} from "./db.js";
+import {Users, Productos, Clientes} from "./db.js";
 import { configDotenv } from "dotenv";
 import lodash from "lodash";
 import express from "express";
@@ -134,7 +134,8 @@ let METHODS = {
 
 let TABLES = {
     users: Users,
-    products: Productos
+    products: Productos,
+    clientes: Clientes
 }
 
 

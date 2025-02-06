@@ -1,7 +1,9 @@
 import { Component } from "react";
 import {Route, NavLink, BrowserRouter, Routes} from "react-router-dom"
 import { ProductsPage} from "./pages/productos.jsx"
-import { reqDB, msg } from "./base.jsx";
+import { ClientPage } from "./pages/clientes.jsx"
+import { FacturePage } from "./pages/facturas.jsx";
+import { reqDB, msg, go, splash } from "./base.jsx";
 
 
 import "./App.css"
@@ -115,6 +117,8 @@ class App extends Component {
 
     render() {
 
+        splash.root = this
+
         if (this.state.loading) {
             return (<div></div>)
         }
@@ -187,7 +191,7 @@ class App extends Component {
                                     <NavTo to="/" img="/src/imgs/nav/dashboard.svg">Panel principal</NavTo>
                                     <NavTo to="/productos" img="/src/imgs/nav/products.svg">Productos</NavTo>
                                     <NavTo to="/clientes" img="/src/imgs/nav/clients.svg">Clientes</NavTo>
-                                    <NavTo to="/facturas" img="/src/imgs/nav/cheks.svg">Facturas</NavTo>
+                                    <NavTo to="/facturacion" img="/src/imgs/nav/cheks.svg">Facturación</NavTo>
                                     <NavTo to="/reportes" img="/src/imgs/nav/report.svg">Reportes</NavTo>
                                     <NavTo to="/conf" img="/src/imgs/nav/conf.svg">Configuraciones</NavTo>
                                     <div className="navlink-base pointer" onClick={() => {
@@ -213,9 +217,27 @@ class App extends Component {
                                         
                                         </Route>
                                         <Route index path="/productos" element={ <ProductsPage /> }></Route>
+                                        <Route index path="/clientes" element={ <ClientPage /> }></Route>
+                                        <Route index path="/facturacion" element={ <FacturePage /> }></Route>
                                     </Routes>
                                 </div>
                             </BrowserRouter>
+
+                            <div className="splash-ui medio" id="_splash" style={{
+                                display:"none"
+                            }}>
+                                <div className="splash-box">
+                                    <div className="head">
+                                        <span className="close" onClick={x=> {
+                                            go("_splash").style.display = "none"
+                                        }}>X</span>
+                                    </div>
+                                    <div className="body">
+                                        {splash.content}
+                                    </div>
+                                </div>
+
+                            </div>
 
                         </div>
                     )

@@ -51,7 +51,6 @@
 
 
 
-
 .navlink-base {
   border-top-right-radius: 30px;
   border-bottom-right-radius: 30px;
@@ -132,7 +131,7 @@
   background-color: transparent !important;
 }
 
-.ant-table {
+.table-container .ant-table {
   overflow: hidden !important;
   box-shadow: 0px 0px 20px gray;
   border-radius: 20px !important;
@@ -161,8 +160,14 @@
   height: max-content;
 }
 
-.table-container {
+.table-container, .table-container-scroll {
   margin: 20px;
+}
+
+.table-container-scroll {
+  border-radius: 20px;
+  box-shadow: 0px 0px 10px gray;
+  overflow: auto;
 }
 
 
@@ -173,6 +178,14 @@
   /* transform: ; */
 
 
+}
+
+.cells-padding-less td.ant-table-cell {
+  padding: 0px !important;
+}
+
+.cells-padding-less td.ant-table-cell .cell {
+  padding: 16px;
 }
 
 
@@ -243,4 +256,78 @@ input._input:read-only {
   background-color: crimson;
   border-color: crimson;
   color: white;
+}
+
+
+
+.hide {
+  display: none;
+}
+
+.splash-ui {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: #88888896;
+}
+
+.splash-box {
+  max-width: 800px;
+  width: calc(100% - 40px);
+  height: calc(100% - 40px);
+  padding: 20px;
+  background-color: var(--bg-color);
+  box-shadow: 0px 0px 10px var(--font-color);
+  border-radius: 20px;
+
+  --size-head-box: 50px;
+
+  .head {
+    width: 100%;
+    height: var(--size-head-box);
+
+    .close {
+      font-size: 30px;
+      cursor: pointer;
+      font-weight: bold;
+      color: gray;
+      transition: .4s;
+      float: right;
+      padding-right: 10px;
+    }
+
+    .close:hover {
+      color: crimson
+    }
+  }
+
+  .body {
+    width: 100%;
+    height: calc(100% - var(--size-head-box));
+    border-radius: 20px;
+    border: solid 1px gray;
+    overflow: auto;
+
+  }
+}
+
+
+.bold {
+  font-weight: bold;
+}
+
+.des-label {
+  font-weight: bold !important;
+  color: var(--font-color) !important;
+  font-size: 16px !important;
+
+}
+
+.des-content {
+  font-weight: lighter !important;
+  color: var(--font-color) !important;
+  font-size: 16px !important;
+  
 }

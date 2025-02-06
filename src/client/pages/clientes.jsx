@@ -1,18 +1,18 @@
 import { Component, createRef } from "react";
 import { Table } from "antd";
-import { go, msg, np_validar, range, reqDB } from "../base";
+import { debug_log, go, msg, np_validar, range, reqDB } from "../base";
 
 const columns = [
-    { title: 'Codigo', dataIndex: 'id', key: 'id' },
-    { title: 'Nombre Producto', dataIndex: 'name', key: 'name' },
-    { title: 'Disponible', dataIndex: 'stock', key: 'stock' },
-    { title: 'Precio', dataIndex: 'price', key: 'price' },
-    { title: 'Estado', dataIndex: 'enable', key: 'enable' },
+    { title: 'Cédula', dataIndex: 'ci', key: 'ci' },
+    { title: 'Nombre y apellido', dataIndex: 'name', key: 'name' },
+    { title: 'Dirección', dataIndex: 'address', key: 'address' },
+    { title: 'Teléfono', dataIndex: 'phone', key: 'phone' },
+    // { title: 'Estado', dataIndex: 'enable', key: 'enable' },
 ];
 
 
 
-class ProductsPage extends Component {
+class ClientPage extends Component {
     
     constructor(props) {
         super(props);
@@ -21,17 +21,15 @@ class ProductsPage extends Component {
 
         this.state = {
             ...this.state,
-            _id: createRef(),
+            _ci: createRef(),
             _name: createRef(),
-            _stock: createRef(),
-            _price: createRef(),
-            _enable: createRef(),
+            _address: createRef(),
+            _phone: createRef(),
+            
         }
     }
 
-
     props = {
-        
         select: false,
         onSelect: (dataResponse) => {}
     }
@@ -41,24 +39,21 @@ class ProductsPage extends Component {
         productos:[],
         rowIndex: -1,
         
-        _id: createRef(),
+        _ci: createRef(),
         _name: createRef(),
-        _stock: createRef(),
-        _price: createRef(),
-        _enable: createRef(),
-
-        data: [],
-        _find:"",
-        filter_mode: 0
+        _address: createRef(),
+        _phone: createRef(),
         
+        data: [],
+        filter_mode: 0,
+        _find: "",
     }
 
     cargar() {
-        reqDB.query(reqDB.METHODS.loadAll, "products", {}, {}).then(y=>{
+        reqDB.query(reqDB.METHODS.loadAll, "clientes", {}, {}).then(y=>{
             // console.log(y)
             y.data.map((x, i) => {
                 x.key = i;
-                x.enable = x.enable ?"Activado":"Desactivado"
             })
             this.setState({data: y.data})
             // console.log(y)
@@ -67,38 +62,38 @@ class ProductsPage extends Component {
 
     select(element, returning, cb) {
 
-        reqDB.query(reqDB.METHODS.find, "products", {id: element.id}).then(x=> {
+        reqDB.query(reqDB.METHODS.find, "clientes", {ci: element.ci}).then(x=> {
 
             if (x.error) {
-                msg.error("Hubo un error al intentar obtener informacion del producto...");
+                msg.error("Hubo un error al intentar obtener información del cliente...");
                 return
             }
             
+            // this.setState({rowIndex: e.key})
             if (returning) {
                 
                 if(cb) cb(x.data)
 
                 return
             }
-            // this.setState({rowIndex: e.key})
 
             this.state._name.current.value = x.data.name;
-            this.state._id.current.valueAsNumber = x.data.id;
-            this.state._stock.current.valueAsNumber = x.data.stock;
-            this.state._price.current.valueAsNumber = x.data.price;
-            this.state._enable.current.valueAsNumber = x.data.enable;
+            this.state._ci.current.valueAsNumber = x.data.ci;
+            this.state._address.current.value = x.data.address;
+            this.state._phone.current.value = x.data.phone;
 
             this.setState({rowIndex: element.key})
         })
 
     }
 
+
+
     reset_caps () {
         this.state._name.current.value = ""
-        this.state._id.current.value = ""
-        this.state._stock.current.value = ""
-        this.state._price.current.value = ""
-        this.state._enable.current.value = 1
+        this.state._ci.current.value = ""
+        this.state._address.current.value = ""
+        this.state._phone.current.value = ""
         this.setState({rowIndex: -1})
     }
 
@@ -111,32 +106,34 @@ class ProductsPage extends Component {
 
         let results = [
             np_validar(
-                (this.state._id.current.valueAsNumber < 0) | (isNaN(this.state._id.current.valueAsNumber)), 
-                this.state._id.current, 
+                (this.state._ci.current.valueAsNumber < 1000000) | (isNaN(this.state._ci.current.valueAsNumber)), 
+                this.state._ci.current, 
                 "_required", 
-                "El id del producto no es valido"
+                "La cédula debe ser un numero mayor a 1000000"
             ),
     
             np_validar(
                 this.state._name.current.value.length < 5, 
                 this.state._name.current, 
                 "_required", 
-                "El nombre del producto debe de tener por lo menos 5 caracteres"
+                "El nombre del cliente debe de tener por lo menos 5 caracteres"
             ),
-    
+
             np_validar(
-                (this.state._stock.current.valueAsNumber < 0) | (isNaN(this.state._stock.current.valueAsNumber)), 
-                this.state._stock.current, 
+                this.state._address.current.value.length < 5, 
+                this.state._address.current, 
                 "_required", 
-                "El stock ingresado es negativo o no es un numero"
+                "La dirección del cliente debe tener como mínimo 5 caracteres"
             ),
-    
+
             np_validar(
-                (this.state._price.current.valueAsNumber <= 0) | (isNaN(this.state._price.current.valueAsNumber)), 
-                this.state._price.current, 
+                (this.state._phone.current.value.length !== 11) | (!(/^\d+$/.test(this.state._phone.current.value))), 
+                this.state._phone.current, 
                 "_required", 
-                "El precio del producto no es valido"
-            )
+                "El numero de teléfono tiene un formato invalido o no esta completo"
+            ),
+
+            
         ]
         results = results.map(x=> Boolean(x))
         // console.log("result", results)
@@ -158,11 +155,11 @@ class ProductsPage extends Component {
 
 
         return {
-            id: this.state._id.current.valueAsNumber,
-            price: this.state._price.current.valueAsNumber,
-            stock: this.state._stock.current.valueAsNumber,
+            ci: this.state._ci.current.valueAsNumber,
+            phone: this.state._phone.current.value,
+            address: this.state._address.current.value,
             name: this.state._name.current.value,
-            enable: parseInt(this.state._enable.current.value)
+            // enable: parseInt(this.state._enable.current.value)
         }
     }
 
@@ -179,7 +176,7 @@ class ProductsPage extends Component {
                     return true
                 case "1":
                 
-                    return ((x.id+"").includes(this.state._find))
+                    return ((x.ci+"").includes(this.state._find))
                 case "2":
                 
                     return ((x.name+"").toUpperCase().includes((this.state._find+"").toUpperCase()))
@@ -210,19 +207,16 @@ class ProductsPage extends Component {
                         
                     }}>
                         <h2 className="title-page">
-                            Productos
+                            Clientes
                         </h2>
                         
-                        <input type="number" className="_input" min={0} ref={this.state._id} placeholder="id del producto" title="Id del producto"
+                        <input type="number" className="_input" min={0} ref={this.state._ci} placeholder="Cédula" title="Cédula"
                             readOnly={this.state.rowIndex !== -1}
                         />
-                        <input type="text" className="_input" ref={this.state._name} placeholder="Nombre del producto"  title="Nombre del producto"/>
-                        <input type="number" className="_input" min={0} ref={this.state._stock} placeholder="Cantidad/Stock disponible"  title="Cantidad/Stock disponible"/>
-                        <input type="number" className="_input" min={0} ref={this.state._price} placeholder="Precio en Bs."  title="Precio en Bs."/>
-                        <select defaultValue={1} ref={this.state._enable} className="_input" title="Estado del producto">
-                            <option value={0}>Desactivado</option>
-                            <option value={1}>Activado</option>
-                        </select>
+                        <input type="text" className="_input" ref={this.state._name} placeholder="Nombre y apellido"  title="Nombre y apellido"/>
+                        <input type="text" className="_input" min={0} ref={this.state._address} placeholder="Dirección"  title="Dirección"/>
+                        <input type="text" className="_input" min={0} ref={this.state._phone} placeholder="Teléfono"  title="Teléfono"/>
+                        
                         <br />
                         <br />
                         {
@@ -237,13 +231,13 @@ class ProductsPage extends Component {
                                     if (!error) {
                                         let data = this.get_formData();
 
-                                        reqDB.query(reqDB.METHODS.create, "products", data).then(x=> {
-                                            if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
+                                        reqDB.query(reqDB.METHODS.create, "clientes", data).then(x=> {
+                                            if (np_validar(x.error, this.state._ci.current, "_required", "La cédula de este cliente ya existe")) {
                                                 console.log("fallo")
                                                 return
                                             };
 
-                                            msg.success("El producto fue agregado exitosamente")
+                                            msg.success("El cliente fue agregado exitosamente")
 
                                             this.reset_caps()
                                             this.cargar()
@@ -263,8 +257,8 @@ class ProductsPage extends Component {
                                         if (!error) {
                                             let data = this.get_formData();
 
-                                            reqDB.query(reqDB.METHODS.update, "products", {id: this.state._id.current.valueAsNumber}, data).then(x=> {
-                                                // if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
+                                            reqDB.query(reqDB.METHODS.update, "clientes", {ci: this.state._ci.current.valueAsNumber}, data).then(x=> {
+                                                // if (np_validar(x.error, this.state._ci.current, "_required", "El id de este producto ya esta siendo usado")) {
                                                 //     console.log("fallo")
                                                 //     return
                                                 // };
@@ -287,7 +281,7 @@ class ProductsPage extends Component {
                                         this.reset_caps()
                                     }} />
 
-                                    <input type="button" className={"_submit " + (this.props.select?"":"hide")} value="Seleccionar este producto"  onClick={() => {
+                                    <input type="button" className={"_submit " + (this.props.select?"":"hide")} value="Seleccionar este cliente"  onClick={() => {
 
                                         let pre_data = this.get_formData();
 
@@ -303,7 +297,7 @@ class ProductsPage extends Component {
 
                 <div className="top-control">
                     <h3 className="title-page">
-                        Buscar producto
+                        Buscar cliente
                     </h3>
                     <input type="text" className="_input" ref={this.state._find} placeholder="Buscar"  title="Buscar" onChange={x=>{
                         // console.log(x.target.value)
@@ -318,8 +312,8 @@ class ProductsPage extends Component {
                         })
                     }}>
                         <option value="0">Ver todo</option>
-                        <option value="1">Filtrar por ID</option>
-                        <option value="2">Filtrar por nombre del producto</option>
+                        <option value="1">Filtrar por cédula</option>
+                        <option value="2">Filtrar por nombre y apellido</option>
                     </select>
                 </div>
 
@@ -327,40 +321,38 @@ class ProductsPage extends Component {
                 <div className="table-container">
 
                     <Table 
-                    className="tab"
-                    
-                    dataSource={filtro} 
-                    columns={columns}
-
-                    pagination={{
-
-                        pageSize: 8,
-                        // total: 8
-                    }}
-
-                     
-                    rowClassName={(e) => {
-                        return "_row-table-antd " + (e.key === this.state.rowIndex ?"active":"")
-                    }} onRow={(e) => {
+                        className="tab"
                         
+                        dataSource={filtro} 
+                        columns={columns}
 
-                        return {
-                            onClick:(row) => {
-                                if (this.state.rowIndex !== e.key) this.select(e);
-                                else this.reset_caps()
+                        pagination={{
 
-                                // console.log(e)
-                            },
-                            onDoubleClick:(row) => {
-                                // alert("seleccionar")
+                            pageSize: 8,
+                            // total: 8
+                        }}
 
-                                if (this.props.select) {
-                                    this.select(e, true, this.props.onSelect)
+                        
+                        rowClassName={(e) => {
+                            return "_row-table-antd " + (e.key === this.state.rowIndex ?"active":"")
+                        }} onRow={(e) => {
+                            
+
+                            return {
+                                onClick:(row) => {
+                                    if (this.state.rowIndex !== e.key) this.select(e);
+                                    else this.reset_caps()
+
+                                    // console.log(e)
+                                },
+                                onDoubleClick: (row) => {
+                                    if (this.props.select) {
+                                        this.select(e, true, this.props.onSelect)
+                                    }
                                 }
+                                
+                                
                             }
-                            
-                            
-                        }
                     }} ></Table>
                 </div>
 
@@ -377,5 +369,5 @@ class ProductsPage extends Component {
 
 
 export {
-    ProductsPage
+    ClientPage
 }
