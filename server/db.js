@@ -47,43 +47,6 @@ let Clientes = model("Cliente", new Schema({
     phone: String,
 }))
 
-let pre_Facturas = new Schema({
-    id: {
-        type: Number,
-    },
-    total: Number,
-    dolar: Number,
-    cliente: Number,
-    pay_method: Number,
-    nota: String,
-    iva: Number,
-    igtf: Number,
-    date: Date
-})
-
-pre_Facturas.pre("save", async function(next, opts) {
-    if (!this.isNew) {
-        return next()
-    }
-
-    try {
-        // Incrementa el contador
-        const counter = await Counters.findOneAndUpdate(
-          { key: "facturaId" }, // Nombre del contador
-          { $inc: { value: 1 } }, // Incrementa el valor en 1
-          { new: true, upsert: true } // Crea el contador si no existe
-        );
-    
-        // Asigna el valor autoincremental al campo `id`
-        this.id = counter.value;
-        next();
-    } catch (error) {
-        next(error);
-    }
-})
-
-let Facturas = model("Factura", pre_Facturas)
-
 
 
 
@@ -102,9 +65,114 @@ let Users = model("User", new Schema({
 
 
 
+
+
+// ===================================================================================================
+// ===================================================================================================
+// ===================================================================================================
+
+
+
+let pre_Facturas = new Schema({
+    id: {
+        type: Number,
+    },
+    total: Number,
+    subtotal: Number,
+    dolar: Number,
+    client: Number,
+    nota: String,
+    iva: Number,
+    igtf: Number,
+    iva_bs: Number,
+    igtf_bs: Number,
+    date: {
+        type: Date,
+        default: Date()
+    }
+});
+
+let pre_Productos_factura = new Schema({
+    id: Number,
+    id_factura: Number,
+    code: Number, 
+    name: String, 
+    price: Number, 
+    amount: Number, 
+    total: Number,
+});
+
+
+let pre_Metodos_factura = new Schema({
+    id: Number,
+    id_factura: Number,
+    method: Number, 
+    pay: Number, 
+    total: Number, 
+    divisa: String
+})
+
+let gen_pre_save = (name_counter) => {
+    
+    return async function pre_save(next, opts) {
+        if (!this.isNew) {
+            return next()
+        }
+    
+        try {
+            // Incrementa el contador
+            const counter = await Counters.findOneAndUpdate(
+              { key: name_counter }, // Nombre del contador
+              { $inc: { value: 1 } }, // Incrementa el valor en 1
+              { new: true, upsert: true } // Crea el contador si no existe
+            );
+        
+            // Asigna el valor autoincremental al campo `id`
+            this.id = counter.value;
+            next();
+        } catch (error) {
+            next(error);
+        }
+    }
+}
+
+
+
+
+pre_Facturas.pre("save", gen_pre_save("id_factura"))
+pre_Metodos_factura.pre("save", gen_pre_save("id_factura_metodo"))
+pre_Productos_factura.pre("save", gen_pre_save("id_factura_producto"))
+
+
+let Facturas = model("Factura", pre_Facturas)
+let ProductoFacturas = model("Productos_Factura", pre_Productos_factura)
+let MetodoFactura = model("Metodos_Factura", pre_Metodos_factura)
+
+// ============================================================================================
+// ============================================================================================
+// ============================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export {
     Users,
     Productos,
     Clientes,
-    Facturas
+    Facturas,
+    ProductoFacturas,
+    MetodoFactura
 }

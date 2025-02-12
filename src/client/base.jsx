@@ -71,7 +71,7 @@ let METODOSDEPAGO = [
     MDP("Bolivares (Transferencia)", "Bs. {n}", CONVERSION.VES),
     MDP("Divisas (Efectivo USD)", "{n} $USD", CONVERSION.USD),
     MDP("Divisas (Transferencia Binance/Wallet)", "{n} $USDT", CONVERSION.USD),
-    MDP("Divisas (Efectivo EUR)", "{n} €", CONVERSION.EUR),
+    // MDP("Divisas (Efectivo EUR)", "{n} €", CONVERSION.EUR),
 
     
 ].map((x,i)=>({...x, key:i}))
@@ -181,6 +181,63 @@ let reqDB = {
             })
 
         })
+    },
+    gen_facture:(client, IVA, IGTF, IVA_BS, IGTF_BS, TOTAL, SUBTOTAL, DOLAR_PRICE, PRODUCTS, METHODS, NOTA) => {
+
+        return new Promise((res, err) => {
+
+            fetch("/api/gen_facture", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    client,
+
+                    IVA,
+                    IGTF,
+                    IGTF_BS,
+                    IVA_BS,
+
+                    TOTAL,
+                    SUBTOTAL, 
+
+                    DOLAR_PRICE,
+                    PRODUCTS,
+                    METHODS,
+
+                    NOTA
+                })
+            }).then(x=>{
+                // console.log(x)
+                x.json().then(y=> {
+    
+                    // console.log(y)
+                    
+                    res(y)
+                })
+            })
+        })
+    },
+    send:(url, body) => {
+        return new Promise((res, err) => {
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body||{})
+            }).then(x=>{
+                // console.log(x)
+                x.json().then(y=> {
+    
+                    // console.log(y)
+                    
+                    res(y)
+                }).catch(v=>err(v))
+            }).catch(x=>err(x))
+        })
     }
 }
 
@@ -202,7 +259,17 @@ let splash = {
     root: Component.prototype
 }
 
+function WATERMARK() {
+    
 
+    return(
+        <center>
+            RIF-J502377980 <br /> 
+            PANADERÍA CYBERCONNECTION <br />
+            PUERTO LA CRUZ <br />
+        </center>
+    )
+}
 
 window.login = reqDB.login;
 
@@ -215,5 +282,6 @@ export {
     debug_log,
     splash,
     METODOSDEPAGO,
-    CONVERSION
+    CONVERSION,
+    WATERMARK
 }

@@ -2,11 +2,13 @@ import { Component } from "react";
 import {Route, NavLink, BrowserRouter, Routes} from "react-router-dom"
 import { ProductsPage} from "./pages/productos.jsx"
 import { ClientPage } from "./pages/clientes.jsx"
-import { FacturePage } from "./pages/facturas.jsx";
+import { FacturePage, ViewFacturePage, ViewFacturePrintPage } from "./pages/facturas.jsx";
+import { ReportPage } from "./pages/reportes.jsx";
 import { reqDB, msg, go, splash } from "./base.jsx";
 
 
 import "./App.css"
+import withRouter from "./components/withRouter.jsx";
 
 
 class NavTo extends Component {
@@ -123,6 +125,10 @@ class App extends Component {
             return (<div></div>)
         }
 
+        // if (location.pathname === "/vfp") {
+        //     return <ViewFacturePrintPage />
+        // }
+
 
         return(
 
@@ -184,43 +190,57 @@ class App extends Component {
                             </div>
                         </div>
                     ):(
-
+                        
                         <div className="container">
                             <BrowserRouter>
-                                <div className="nav-control">
-                                    <NavTo to="/" img="/src/imgs/nav/dashboard.svg">Panel principal</NavTo>
-                                    <NavTo to="/productos" img="/src/imgs/nav/products.svg">Productos</NavTo>
-                                    <NavTo to="/clientes" img="/src/imgs/nav/clients.svg">Clientes</NavTo>
-                                    <NavTo to="/facturacion" img="/src/imgs/nav/cheks.svg">Facturación</NavTo>
-                                    <NavTo to="/reportes" img="/src/imgs/nav/report.svg">Reportes</NavTo>
-                                    <NavTo to="/conf" img="/src/imgs/nav/conf.svg">Configuraciones</NavTo>
-                                    <div className="navlink-base pointer" onClick={() => {
-                                        document.location.assign("/api/logout")
-                                    }}>
-                                        <div className="_icon" style={{
-                                            backgroundImage:`url('/src/imgs/nav/logout.svg')`
-                                        }}>
+                                {/* <Route path="/vfp" element={ <ViewFactureTextPlainComponent /> }></Route> */}
+                                {
+                                    location.pathname === "/vfp"?(
+                                        <ViewFacturePrintPage />
+                                    ):(
+                                    <>
+                                    
+                                        <div className="nav-control">
+                                            <NavTo to="/" img="/src/imgs/nav/dashboard.svg">Panel principal</NavTo>
+                                            <NavTo to="/productos" img="/src/imgs/nav/products.svg">Productos</NavTo>
+                                            <NavTo to="/clientes" img="/src/imgs/nav/clients.svg">Clientes</NavTo>
+                                            <NavTo to="/facturacion" img="/src/imgs/nav/cheks.svg">Facturación</NavTo>
+                                            <NavTo to="/reportes" img="/src/imgs/nav/report.svg">Reportes</NavTo>
+                                            <NavTo to="/conf" img="/src/imgs/nav/conf.svg">Configuraciones</NavTo>
+                                            <div className="navlink-base pointer" onClick={() => {
+                                                document.location.assign("/api/logout")
+                                            }}>
+                                                <div className="_icon" style={{
+                                                    backgroundImage:`url('/src/imgs/nav/logout.svg')`
+                                                }}>
 
+                                                </div>
+                                                <div className="_caption">
+                                                    Cerrar sesion
+
+                                                </div>
+
+                                            </div>
                                         </div>
-                                        <div className="_caption">
-                                            Cerrar sesion
-
+                                        <div className="body-content">
+                                            <Routes>
+                                                <Route path="/" element={[
+                                                    <Dashboard username={this.state.user} />
+                                                ]}>
+                                                
+                                                </Route>
+                                                <Route path="/productos" element={ <ProductsPage /> }></Route>
+                                                <Route path="/clientes" element={ <ClientPage /> }></Route>
+                                                <Route path="/facturacion" element={ <FacturePage /> }></Route>
+                                                <Route path="/reportes" element={ <ReportPage /> }></Route>
+                                                <Route index path="/viewfacture" element={ <ViewFacturePage /> }></Route>
+                                            </Routes>
                                         </div>
+                                    </>
 
-                                    </div>
-                                </div>
-                                <div className="body-content">
-                                    <Routes>
-                                        <Route path="/" element={[
-                                            <Dashboard username={this.state.user} />
-                                        ]}>
-                                        
-                                        </Route>
-                                        <Route index path="/productos" element={ <ProductsPage /> }></Route>
-                                        <Route index path="/clientes" element={ <ClientPage /> }></Route>
-                                        <Route index path="/facturacion" element={ <FacturePage /> }></Route>
-                                    </Routes>
-                                </div>
+                                    )
+                                }
+
                             </BrowserRouter>
 
                             <div className="splash-ui medio" id="_splash" style={{
@@ -247,4 +267,4 @@ class App extends Component {
     }
 }
 
-export default App;
+export default (App);

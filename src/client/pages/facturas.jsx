@@ -1,10 +1,12 @@
 import { Component, createRef } from "react";
-import { go, np_validar, msg, reqDB, splash, METODOSDEPAGO, CONVERSION } from "../base"; 
+import { go, np_validar, msg, reqDB, splash, METODOSDEPAGO, CONVERSION, debug_log, WATERMARK } from "../base"; 
 import { ClientPage } from "./clientes";
 import { ProductsPage } from "./productos";
-import { Table, Dropdown, Menu, Descriptions } from "antd";
+import { Table, Dropdown, Menu, Descriptions, message } from "antd";
 import Dayjs from "dayjs"
 import { method, range } from "lodash";
+import withRouter from "../components/withRouter";
+import { Link, useLocation } from "react-router-dom";
 
 
 
@@ -70,12 +72,6 @@ let RenderMethods = (FactureInstance = FacturePage.prototype) => (text, context)
         </Dropdown>
     )
 }
-        
-    
-
-
-
-
 
 
 
@@ -86,9 +82,9 @@ function ProductData(id, name, price, amount, total) {
 }
 
 
-function MethodData(method, pay, total) {
+function MethodData(method, pay, total, divisa) {
     return({
-        method, pay, total
+        method, pay, total, divisa
     })
 }
 
@@ -106,7 +102,7 @@ function DescriptionData(label, children, opts) {
 
 
 
-class FacturePage extends Component {
+class PREFacturePage extends Component {
 
 
     constructor(props) {
@@ -159,6 +155,8 @@ class FacturePage extends Component {
         metodo_pago: -1,
         cantidad_pago: "",
 
+        nota:"",
+
         IVA: 16, 
         IGTF: 3
         
@@ -196,7 +194,7 @@ class FacturePage extends Component {
     
     render() {
 
-        let SUBTOTAL = 0, PAGO_RESTANTE = 0
+        let SUBTOTAL = 0, PAGO_RESTANTE = 0, IGTF_SUMATORY = 0, USD = CONVERSION.divisa_value.usd
 
         this.data_products.forEach(x=>{
             let t = ProductData()
@@ -209,17 +207,37 @@ class FacturePage extends Component {
         this.metodos_de_pago.forEach(x=>{
             let t = MethodData()
             t = x;
+            // console.log(x)
 
-            PAGO_RESTANTE = PAGO_RESTANTE + t.total
+            PAGO_RESTANTE = (PAGO_RESTANTE + t.total)
+
+            if (t.divisa !== CONVERSION.VES) {
+                // console.log(t.total, this.state.IGTF)
+                IGTF_SUMATORY = IGTF_SUMATORY + debug_log(
+                    t.total * (this.state.IGTF*0.01)
+                )
+            }
+            
         });
 
+        // console.log(IGTF_SUMATORY)
+
+        // console.log(this.props)
+
         
-        
+        let TOTAL = SUBTOTAL * ((this.state.IVA*0.01) + 1) + IGTF_SUMATORY
+
+        let IVA_BS =  SUBTOTAL * (this.state.IVA*0.01) 
 
         let RESUMEN = [
             DescriptionData("Fecha de facturación", (Dayjs()).format("DD/MM/YYYY")),
             DescriptionData("SubTotal", `Bs. ${SUBTOTAL.toFixed(2)}`),
-            DescriptionData("Total", `Bs. ${SUBTOTAL.toFixed(2)}`),
+            DescriptionData("Precio del dolar", `Bs. ${USD}`),
+            DescriptionData("Porcentaje IVA", `${this.state.IVA}%`),
+            DescriptionData("Porcentaje IGTF", `${this.state.IGTF}%`),
+            DescriptionData("Suma del IGTF en bs", `Bs. ${IGTF_SUMATORY.toFixed(2)}`),
+            DescriptionData("Suma del IVA en bs", `Bs. ${(IVA_BS).toFixed(2)}`),
+            DescriptionData("Total", `Bs. ${TOTAL.toFixed(2)}`),
             
         ]
         .map((x,i)=> {
@@ -235,6 +253,8 @@ class FacturePage extends Component {
         return(
             <div className="container">
                 
+                {/* FACTURACION */}
+
                 <div className="top-control">
                     <h2 className="title-page" style={{
                         margin: "0px",
@@ -255,8 +275,9 @@ class FacturePage extends Component {
                     
                 </div>
                 
-                <hr />
+                <hr />  
                 
+                {/* FORMULARIO DE CLIENTES */}
                 <div className="top-control">
 
                     <h3 className="title-page">
@@ -279,6 +300,8 @@ class FacturePage extends Component {
                 </div>
 
                 <hr />
+
+                {/* FORMULARIO Y TABLA DE PRODUCTOS */}
 
                 <div className="top-control">
 
@@ -395,7 +418,10 @@ class FacturePage extends Component {
                     }} ></Table>
                 </div>
 
+                
                 <hr />
+
+                {/* FORMULARIO Y TABLA METODOS DE PAGO */}
 
                 <div className="top-control">
 
@@ -462,9 +488,14 @@ class FacturePage extends Component {
                         <input type="number" id="_cantPay" className="_input" placeholder="Pago en divisas/Bs. de acuerdo al método" title="Pago en divisas/Bs. de acuerdo al método" value={this.state.cantidad_pago} onChange={(x) => {
                             let {value: cant, value: text} = x.target;
 
-                            if (!isNaN(cant) | text === "") this.setState({
-                                cantidad_pago: cant
-                            })
+                            if (!isNaN(cant) | text === "") {
+
+
+                                this.setState({
+                                    cantidad_pago: (cant)
+                                })
+                            }
+                            
                         }}/>
                     </Dropdown>
 
@@ -499,9 +530,10 @@ class FacturePage extends Component {
                         this.metodos_de_pago.push(MethodData(
                             this.state.metodo_pago,
                             NumberCantidadPago,
-                            NumberCantidadPago * CONVERSION.divisa_value[
+                            Number(parseInt(NumberCantidadPago * CONVERSION.divisa_value[
                                 METODOSDEPAGO[this.state.metodo_pago].divisa
-                            ]
+                            ])),
+                            METODOSDEPAGO[this.state.metodo_pago].divisa
                         ))
                         
                         this.MethodCleanForm()
@@ -573,6 +605,8 @@ class FacturePage extends Component {
 
                 <hr />
 
+                {/* RESUMEN */}
+
                 <div className="top-control">
                     <h3 className="title-page">
                         Resumen
@@ -592,6 +626,101 @@ class FacturePage extends Component {
                             ...RESUMEN
                         ]} 
                     />
+                    
+
+                </div>
+
+                <div className="top-control">
+                    <h3 className="title-page">
+                        Nota (opcional)
+                    </h3>
+                    <hr />
+                    <br />
+                    <textarea id="" className="_textarea" onChange={x=>{
+
+                        this.setState({
+                            nota: x.target.value
+                        })
+                    }}>
+
+                    </textarea>
+
+                </div>
+
+                <div className="top-control">
+                    <h3 className="title-page">
+                        Gestion
+                    </h3>
+                    <hr />
+                    <input type="button" value="Generar factura" className="_submit" onClick={x=>{
+
+                        if ((this.state.client === "") | (this.state.client === 0)) {
+                            
+                            return msg.error("Debes seleccionar un cliente")
+                        }
+
+                        if (this.data_products.length === 0) {
+                            
+                            return msg.error("Debes establecer al menos un producto para proceder")
+                        }
+
+                        if (this.metodos_de_pago.length === 0) {
+                            
+                            return msg.error("Debes establecer métodos de pago para proceder")
+                        }
+
+                        if ((SUBTOTAL - PAGO_RESTANTE).toFixed(0) > 2) {
+                            return msg.warning(`No haz establecido un pago completo, aun queda Bs. ${(SUBTOTAL - PAGO_RESTANTE).toFixed(2)} restante`)
+                            
+                        }
+
+                        // return msg.success("Factura generada exitosamente")
+
+                        msg.MessageApi.loading({
+                            content:"Generando factura",
+                            key:923,
+                            duration: 1000
+                        })
+                        
+
+                        reqDB.gen_facture(
+                            this.state.client,
+
+                            this.state.IVA,
+                            this.state.IGTF,
+
+                            IVA_BS,
+                            IGTF_SUMATORY,
+                            TOTAL,
+                            SUBTOTAL,
+                            USD,
+                            this.data_products,
+                            this.metodos_de_pago,
+
+                            this.state.nota
+                        ).then(x=> {
+
+                            if (x.error) {
+                                return msg.error("No posees permisos para ejecutar esta acción")
+                            }
+
+                            msg.MessageApi.destroy(923)
+                            msg.success("La factura a sido generada exitosamente")
+
+
+
+                            this.props.navigate(`/viewfacture?id=${x.data.facture_id}`, {})
+
+                        })
+                        .catch(x=> {
+
+                            console.log(x)
+
+                            msg.MessageApi.destroy(923)
+                            msg.error("Algo mal ha ocurrido...")
+
+                        })
+                    }} />
                 </div>
 
 
@@ -603,7 +732,329 @@ class FacturePage extends Component {
 }
 
 
+class SpanData extends Component {
+    constructor(props) {
+        super(props);
+    
+        this.props = props
+    }
+
+    props = {
+        title:"",
+        content:"",
+        right: ""
+    }
+
+
+    render() {
+        return(
+            <>
+                <span>
+
+                    <b>
+                        {this.props.title}
+                    </b>
+                    <span>
+                        {" "}{this.props.children}
+                    </span>
+                    <span style={{
+                        float: "right"
+                    }}>
+                        {this.props.right}
+                    </span>
+                    
+
+                </span>
+                <br />
+            </>
+        )
+    }
+}
+
+
+
+class PREViewFactureTextPlainComponent extends Component {
+
+
+    constructor(props) {
+        super(props);
+    
+        this.props = props
+    }
+
+    props = {
+        onLoadend:(x) => {},
+        id: 0
+    }
+
+    state = {
+        Factura: {},
+        Cliente: {},
+        MetodoDePago: [],
+        Productos: [],
+
+        loading: true
+
+    }
+
+    componentDidMount() {
+
+        let id = 0;
+
+        if (this.props.id === 0) {
+            
+            let location = this.props.location;
+            let params = new URLSearchParams(location.search);
+            id = Number(params.get("id"));
+        } else id = this.props.id
+
+
+        reqDB.send("/api/get_facture", {id}).then(x=> {
+
+            if (x.error) {
+                return msg.error("El id de esta factura no es Valida")
+            }
+            // console.log(x)
+            this.setState({
+                Factura: x.data.Factura,
+                Cliente: x.data.Cliente,
+                MetodoDePago: x.data.MetodoDePago,
+                Productos: x.data.Productos,
+                loading: false
+            }, () => {
+                setTimeout(() =>  {
+                    if (this.props.onLoadend) {
+                        this.props.onLoadend(this)
+                        
+                    }
+                },100)
+            })
+            
+        })
+        
+    }
+
+    render() {
+        // console.log("State:", this.state)
+
+        if (this.state.loading) return(<div className="container"></div>)
+
+        return(
+            <div className="container" key={this.state.Factura.id + "-FACTURE"}>
+
+                {
+                    WATERMARK()
+                }
+                <br />
+
+                <SpanData title="Numero de control:" >
+                    {(this.state.Factura.id).toString().padStart(10, "0")}
+                </SpanData>
+                <SpanData title="Fecha de facturación:" right={"HORA: "+(Dayjs(new Date(this.state.Factura.date))).format("hh:mm A")}>
+                    {(Dayjs(new Date(this.state.Factura.date))).format("DD/MM/YYYY") }
+                </SpanData>
+                <br />
+                <SpanData title="CI/R.I.F:" >
+                    {this.state.Cliente.ci}
+                </SpanData>
+                <SpanData title="Nombre:" >
+                    {this.state.Cliente.name}
+                </SpanData>
+                <SpanData title="Dirección:" >
+                    {this.state.Cliente.address}
+                </SpanData>
+                <SpanData title="Teléfono:" >
+                    {this.state.Cliente.phone}
+                </SpanData>
+                
+                <br />
+                <hr />
+                <br />
+                {
+                    this.state.Productos.map((x, i)=> {
+
+
+                        return(
+                            <>
+                                <SpanData title={(
+                                        <>
+                                            !Codigo: {(x.code).toString().padStart(4, "0")} <br />
+                                            {x.name} ({x.amount}): 
+                                        </>
+                                    )}
+                                    key={i + "-product"}
+                                    right={<>Bs. {x.total.toFixed(2)}</>}
+
+                                    >
+                                        
+                                </SpanData>
+                                <br />
+                            </>
+                        )
+                    })
+                }
+                {/* <br /> */}
+                <hr />
+                <br />
+                {
+                    this.state.MetodoDePago.map((x, i)=> {
+
+                        let met = METODOSDEPAGO[x.method]
+
+
+                        return(
+                            <>
+                                <SpanData title={`${met.name}:`}  key={i + "-method"}
+                                    
+                                    right={<>Bs. {x.total.toFixed(2)}</>}
+
+                                    >
+                                        {(met.divisa !== CONVERSION.VES)&&(
+                                            met.format.replace("{n}", x.pay.toFixed(2))
+                                        )}
+                                        
+                                </SpanData>
+                            </>
+                        )
+                    })
+                }
+                <br />
+                <hr />
+                <br />
+                <SpanData title="SUBTOTAL:"
+                    right={`Bs. ${this.state.Factura.subtotal.toFixed(2)}`}
+                ></SpanData>
+
+                <SpanData title="IVA:"
+                    right={`Bs. ${this.state.Factura.iva_bs.toFixed(2)}`}
+                >
+                    {this.state.Factura.iva}%
+                </SpanData>
+                <SpanData title="IGTF:"
+                    right={`Bs. ${this.state.Factura.igtf_bs.toFixed(2)}`}
+                >
+                    {this.state.Factura.igtf}% {(this.state.Factura.igtf_bs === 0) && "(No incluye)"}
+                </SpanData>
+
+
+                <br />
+                <hr />
+                <br />
+                {(this.state.Factura.igtf_bs > 0) && (
+                    <SpanData title="PRECIO DOLAR:">
+                        Bs. {this.state.Factura.dolar.toFixed(2)}
+                    </SpanData>
+                )}
+
+                <SpanData title="TOTAL:"
+                    right={`Bs. ${this.state.Factura.total.toFixed(2)}`}
+                ></SpanData>
+                <br />
+                <br />
+
+                
+                
+
+
+
+            </div>
+        )
+
+    }
+}
+
+
+class PREViewFacturePage extends Component {
+
+
+    constructor(props) {
+        super(props);
+    
+        this.props = props
+    }
+
+    props = {
+
+    }
+
+    state = {
+
+    }
+
+    componentDidMount() {
+
+    }
+
+    render() {
+
+        let location = this.props.location;
+        let params = new URLSearchParams(location.search);
+        let id = Number(params.get("id"));
+
+        return(
+            <div className="container">
+                <br />
+                <div className="top-control">
+                    <h2 className="title-page">
+                        Vista de la factura
+                    </h2>
+                    <hr />
+                    <Link to={"/"}>
+                        <input type="button" className="_submit" value="Volver al inicio" />
+                    </Link>
+                    <Link to={"/facturacion"}>
+                        <input type="button" className="_submit" value="Hacer otra factura" />
+                    </Link>
+                        <input type="button" className="_submit" value="Imprimir" onClick={x=> {
+
+                            open("/vfp?id=" + id, "Imprimir", 'width=800,height=600')
+                        }}/>
+                    <hr />
+                    <br />
+                    <div className="page-container">
+                        <ViewFactureTextPlainComponent onLoadend={(x) => {
+                            
+                        }}>
+
+                        </ViewFactureTextPlainComponent>
+                    </div>
+                </div>
+                <br />
+            </div>
+        )
+
+    }
+}
+
+class ViewFacturePrintPage extends Component {
+    constructor(props) {
+        super(props);
+    
+        this.props = props
+    }
+
+    render() {
+
+        return(
+            <ViewFactureTextPlainComponent onLoadend={(e) => {
+                print();
+                close()
+            }}>
+                
+            </ViewFactureTextPlainComponent>
+        )
+    }
+    
+}
+
+
+const FacturePage = withRouter(PREFacturePage)
+const ViewFactureTextPlainComponent = withRouter(PREViewFactureTextPlainComponent)
+const ViewFacturePage = withRouter(PREViewFacturePage)
 
 export {
-    FacturePage
+    FacturePage,
+    ViewFactureTextPlainComponent,
+    ViewFacturePage,
+    ViewFacturePrintPage
 }
