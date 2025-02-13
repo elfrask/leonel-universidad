@@ -1,5 +1,5 @@
 import fs from "fs";
-import {Users, Productos, Clientes, Facturas, MetodoFactura, ProductoFacturas} from "./db.js";
+import {Users, Productos, Clientes, Facturas, MetodoFactura, ProductoFacturas, Config} from "./db.js";
 import { configDotenv } from "dotenv";
 // import lodash, { forEach } from "lodash";
 import express from "express";
@@ -139,6 +139,85 @@ let TABLES = {
 }
 
 
+let METODO_CONF = {
+    getAll: "GETALL",
+    save: "SAVE",
+    get: "GET"
+}
+
+api.post("/config", async (req, res) => {
+
+    let {METHOD, key, value} = req.body
+
+    user_verify(req.session)
+    .then(async (x)=> {
+
+        
+
+        switch (METHOD) {
+            case METODO_CONF.save:
+
+                let _config = await Config.findOne({key});
+
+
+                if (_config) {
+                    _config.value = value;
+                    await _config.save()
+                } else {
+                    
+                    let result = new Config({key, value})
+                    await result.save();
+                }
+                
+                
+
+                res.json({
+                    error:0,
+                    data: true
+                })
+                
+
+
+                break;
+            case METODO_CONF.getAll:
+                
+                let _tabla = await Config.find({});
+
+                
+
+                res.json({
+                    error: 0,
+                    data: _tabla
+                })
+
+                break;
+            case METODO_CONF.get:
+                
+                let _config_ = await Config.findOne({key});
+
+                if (!_config_) {
+                    _config_ = new Config({key, value:""});
+
+                    await _config_.save()
+                }
+
+                res.json({
+                    error: 0,
+                    data: _config_
+                })
+
+                break;
+            
+        }
+    })
+    .catch(x=> {
+        console.log(x)
+        res.json({
+            error: 5,
+            data:{}
+        })
+    })
+})
 
 api.post("/db", async (req, res) => {
 
@@ -304,7 +383,12 @@ api.post("/gen_facture", async (req, res) => {
                 id_factura: FACTURA.id
     
             })
-    
+
+            let PRODUCTO_STOCK = await Productos.findOne({id: x.id})
+
+            PRODUCTO_STOCK.stock = parseFloat((PRODUCTO_STOCK.stock - x.amount).toFixed(2))
+            
+            await PRODUCTO_STOCK.save()
             await PRODUCTO.save()
         }
 

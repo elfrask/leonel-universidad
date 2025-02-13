@@ -39,6 +39,10 @@
   display: block;
 }
 
+.page {
+  max-width: 750px;
+}
+
 .center, .medio {
     display: flex;
     justify-content: center;
@@ -112,6 +116,8 @@
   width: calc(100% - var(--nav-size));
   float: left;
   overflow: auto;
+  display: flex;
+  justify-content: center;
 }
 
 ._row-table-antd {

@@ -190,7 +190,7 @@ class ClientPage extends Component {
 
 
         return(
-            <div className="container" onKeyDown={(e) => {
+            <div className="container page" onKeyDown={(e) => {
                 
                 
                 

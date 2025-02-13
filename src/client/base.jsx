@@ -98,6 +98,12 @@ let METHODS = {
     
 }
 
+let METODO_CONF = {
+    getAll: "GETALL",
+    save: "SAVE",
+    get: "GET"
+}
+
 function debug_log(p) {
     console.log(p);
 
@@ -106,6 +112,7 @@ function debug_log(p) {
 
 let reqDB = {
     METHODS,
+    METODO_CONF,
     query:(METHOD="", table="", query= {}, update={}) => {
 
         return new Promise((res, err) => {
@@ -119,7 +126,7 @@ let reqDB = {
                 body: JSON.stringify({
                     METHOD,
                     table,
-                    query,
+                    query: query||{},
                     update:update||{}
                 })
             }).then(X=> {
@@ -238,6 +245,34 @@ let reqDB = {
                 }).catch(v=>err(v))
             }).catch(x=>err(x))
         })
+    },
+    config:(_METODO, key, value, default_value) => {
+
+        return new Promise((res, err) => {
+
+            reqDB.send("/api/config", {
+                METHOD: _METODO,
+                key,
+                value
+            }).then(x=> {
+
+                if (x.error) {
+                    err(x)
+                    return
+                } 
+                
+                if ((x.data.value === undefined) | (x.data.value === "")) {
+                    res(default_value)
+                    return
+                }
+
+
+                res(x.data.value)
+            
+            }).catch(x=> err(x))
+
+        })
+        
     }
 }
 
@@ -273,6 +308,55 @@ function WATERMARK() {
 
 window.login = reqDB.login;
 
+
+class SpanData extends Component {
+    constructor(props) {
+        super(props);
+    
+        this.props = props
+    }
+
+    props = {
+        title:"",
+        content:"",
+        right: ""
+    }
+
+
+    render() {
+        return(
+            <>
+                <span>
+
+                    <b>
+                        {this.props.title}
+                    </b>
+                    <span>
+                        {" "}{this.props.children}
+                    </span>
+                    <span style={{
+                        float: "right"
+                    }}>
+                        {this.props.right}
+                    </span>
+                    
+
+                </span>
+                <br />
+            </>
+        )
+    }
+}
+
+let USER_ROLE = {
+    ROLES: [
+        "Administrador",
+        "Vendedor",
+        "Almacenista"
+    ]
+}
+
+
 export {
     go,
     range,
@@ -283,5 +367,7 @@ export {
     splash,
     METODOSDEPAGO,
     CONVERSION,
-    WATERMARK
+    WATERMARK,
+    SpanData,
+    USER_ROLE
 }

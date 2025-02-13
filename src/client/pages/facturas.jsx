@@ -1,5 +1,5 @@
 import { Component, createRef } from "react";
-import { go, np_validar, msg, reqDB, splash, METODOSDEPAGO, CONVERSION, debug_log, WATERMARK } from "../base"; 
+import { go, np_validar, msg, reqDB, splash, METODOSDEPAGO, CONVERSION, debug_log, WATERMARK, SpanData } from "../base"; 
 import { ClientPage } from "./clientes";
 import { ProductsPage } from "./productos";
 import { Table, Dropdown, Menu, Descriptions, message } from "antd";
@@ -21,14 +21,39 @@ let RenderProducts = (FactureInstance = FacturePage.prototype) => (text, context
                 items: [
                     {
                         key:1,
-                        label: "Eliminar producto",
+                        label: "Eliminar pedido",
                         onClick:(e) => {
                             // console.log("Eliminar", e, context, FactureInstance)
                             FactureInstance.data_products = FactureInstance.data_products.filter((x, i)=> i !== context.key)
                             FactureInstance.setState({})
                         },
 
-                    }
+
+                    },
+                    {
+                        key:2,
+                        label: "Editar pedido",
+                        onClick: async (e) => {
+                            // console.log("Eliminar", e, context, FactureInstance)
+                            FactureInstance.data_products = FactureInstance.data_products.filter((x, i)=> i !== context.key)
+
+                            FactureInstance.state.cantidad.current.value = context.amount
+
+                            // console.log(context)
+
+                            let producto = (await reqDB.query(reqDB.METHODS.find, "products", {id: context.id})).data
+
+                            FactureInstance.setState({
+                                productId: context.id,
+                                product_name: context.name,
+                                product_data: context,
+                                product_stock: producto.stock
+                            })
+                        },
+
+
+                    },
+                    
                 ],
                 
             }}
@@ -149,6 +174,7 @@ class PREFacturePage extends Component {
         product_name: "",
         product_data: {},
         productId: -1,
+        product_stock: -1,
 
         cantidad: createRef(),
 
@@ -165,6 +191,8 @@ class PREFacturePage extends Component {
     data_products = []
     metodos_de_pago = []
 
+
+
     productCleanForm() {
 
         this.state.cantidad.current.value = ""
@@ -173,6 +201,7 @@ class PREFacturePage extends Component {
             product_name: "",
             product_data: {},
             productId: -1,
+            product_stock: -1
         })
     }
 
@@ -187,7 +216,18 @@ class PREFacturePage extends Component {
 
     
 
-    componentDidMount() {
+    async componentDidMount() {
+
+        let DOLAR = await reqDB.config(reqDB.METODO_CONF.get, "dolar", "", 60);
+        let IVA = await reqDB.config(reqDB.METODO_CONF.get, "iva", "", 15);
+        let IGTF = await reqDB.config(reqDB.METODO_CONF.get, "igtf", "", 2);
+
+        CONVERSION.divisa_value.usd = DOLAR
+
+        this.setState({
+            IVA: parseFloat(IVA),
+            IGTF: parseFloat(IGTF),
+        })
 
     }
 
@@ -251,7 +291,7 @@ class PREFacturePage extends Component {
 
 
         return(
-            <div className="container">
+            <div className="container page">
                 
                 {/* FACTURACION */}
 
@@ -309,20 +349,40 @@ class PREFacturePage extends Component {
                         Agrega productos
                     </h3>
                     <input type="text" readOnly id="_prodName" onChange={()=>{}} className="_input" placeholder="Nombre del producto" title="Nombre del producto" value={this.state.product_name}/>
+                    
                     <input type="button" className="_submit" value="Seleccionar producto" onClick={() => {
 
                         splash.open(<ProductsPage select onSelect={(data) => {
+
+                            
+                            for (let i = 0; i < this.data_products.length; i++) {
+                                const producto = this.data_products[i];
+                                
+                                if (data.id === producto.id) {
+                                    
+                                    return msg.error("Ya este producto esta en la lista")
+                                }
+                                
+                            };
 
                             splash.close();
 
                             this.setState({
                                 productId: data.id,
                                 product_name: data.name,
-                                product_data: data
+                                product_data: data,
+                                product_stock: data.stock
                             })
                         }} />)
                     }} />
                     <hr />
+                    {
+                        (this.state.product_stock !== -1) && (
+                            <div className="_title">
+                                Cantidad disponible: {this.state.product_stock}
+                            </div>
+                        )
+                    }
                     <input type="number" ref={this.state.cantidad} className="_input" placeholder="Cantidad" title="Cantidad"/>
                     <hr />
                     <input type="button" className="_submit" value="Agregar" onClick={() => {
@@ -335,11 +395,18 @@ class PREFacturePage extends Component {
                                 "Debes seleccionar un producto para agregar"
                             ),
                             np_validar(
-                                (this.state.cantidad.current.valueAsNumber < 1) | isNaN(this.state.cantidad.current.valueAsNumber),
+                                (this.state.cantidad.current.valueAsNumber < 1) | isNaN(this.state.cantidad.current.valueAsNumber) | (this.state.cantidad.current.valueAsNumber > this.state.product_stock),
                                 this.state.cantidad.current,
                                 "_required",
-                                "Debes asignar una cantidad valida y mayor a 0"
+                                "Debes asignar una cantidad valida, mayor a 0 y que no supere la cantidad de stock disponible"
                             ),
+                            // np_validar(
+                            //     (this.state.cantidad.current.valueAsNumber > this.state.product_stock),
+                            //     this.state.cantidad.current,
+                            //     "_required",
+                            //     "La cantidad supera a el stock disponible"
+                            // ),
+                            
                             
                         ]
 
@@ -396,18 +463,6 @@ class PREFacturePage extends Component {
                                 style: {
                                     padding: "0px"
                                 },
-                                
-                                // onClick:(row) => {
-                                //     if (this.state.rowIndex !== e.key) this.select(e);
-                                //     else this.reset_caps()
-
-                                //     // console.log(e)
-                                // },
-                                // onDoubleClick: (row) => {
-                                //     if (this.props.select) {
-                                //         this.select(e, true, this.props.onSelect)
-                                //     }
-                                // }
                                 onContextMenu:(event) => {
                                     event.preventDefault()
                                 },
@@ -732,44 +787,6 @@ class PREFacturePage extends Component {
 }
 
 
-class SpanData extends Component {
-    constructor(props) {
-        super(props);
-    
-        this.props = props
-    }
-
-    props = {
-        title:"",
-        content:"",
-        right: ""
-    }
-
-
-    render() {
-        return(
-            <>
-                <span>
-
-                    <b>
-                        {this.props.title}
-                    </b>
-                    <span>
-                        {" "}{this.props.children}
-                    </span>
-                    <span style={{
-                        float: "right"
-                    }}>
-                        {this.props.right}
-                    </span>
-                    
-
-                </span>
-                <br />
-            </>
-        )
-    }
-}
 
 
 
@@ -801,13 +818,14 @@ class PREViewFactureTextPlainComponent extends Component {
 
         let id = 0;
 
-        if (this.props.id === 0) {
+        if (!this.props.id) {
             
             let location = this.props.location;
             let params = new URLSearchParams(location.search);
             id = Number(params.get("id"));
         } else id = this.props.id
 
+        // console.log("load facture", id)
 
         reqDB.send("/api/get_facture", {id}).then(x=> {
 
@@ -992,7 +1010,7 @@ class PREViewFacturePage extends Component {
         let id = Number(params.get("id"));
 
         return(
-            <div className="container">
+            <div className="container page">
                 <br />
                 <div className="top-control">
                     <h2 className="title-page">
@@ -1056,5 +1074,8 @@ export {
     FacturePage,
     ViewFactureTextPlainComponent,
     ViewFacturePage,
-    ViewFacturePrintPage
+    ViewFacturePrintPage,
+
+
+    PREViewFactureTextPlainComponent
 }

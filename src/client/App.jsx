@@ -3,12 +3,13 @@ import {Route, NavLink, BrowserRouter, Routes} from "react-router-dom"
 import { ProductsPage} from "./pages/productos.jsx"
 import { ClientPage } from "./pages/clientes.jsx"
 import { FacturePage, ViewFacturePage, ViewFacturePrintPage } from "./pages/facturas.jsx";
-import { ReportPage } from "./pages/reportes.jsx";
+import { PREViewReportTextPlainComponent, ReportPage } from "./pages/reportes.jsx";
 import { reqDB, msg, go, splash } from "./base.jsx";
 
 
 import "./App.css"
 import withRouter from "./components/withRouter.jsx";
+import { ConfPage } from "./pages/conf.jsx";
 
 
 class NavTo extends Component {
@@ -95,6 +96,7 @@ class Dashboard extends Component {
     
 }
 
+window.onPass = window.onPass||(() => {});
 
 class App extends Component {
 
@@ -125,9 +127,21 @@ class App extends Component {
             return (<div></div>)
         }
 
-        // if (location.pathname === "/vfp") {
-        //     return <ViewFacturePrintPage />
-        // }
+        if (location.pathname === "/rpp") {
+            return <PREViewReportTextPlainComponent wait_data={true} onPromptData={(pass) => {
+
+                window.pass = pass
+                window.onPass(pass)
+
+
+            }} onLoadend={x=>{
+                setTimeout(() => {
+                    print();
+                    close();
+                    
+                }, 100)
+            }} />
+        }
 
 
         return(
@@ -233,6 +247,7 @@ class App extends Component {
                                                 <Route path="/clientes" element={ <ClientPage /> }></Route>
                                                 <Route path="/facturacion" element={ <FacturePage /> }></Route>
                                                 <Route path="/reportes" element={ <ReportPage /> }></Route>
+                                                <Route path="/conf" element={ <ConfPage /> }></Route>
                                                 <Route index path="/viewfacture" element={ <ViewFacturePage /> }></Route>
                                             </Routes>
                                         </div>

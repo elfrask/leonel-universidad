@@ -60,7 +60,19 @@ let Users = model("User", new Schema({
         type: String,
         required: true,
     },
+    role: {
+        type: Number,
+        default: 2
+    }
 
+}))
+
+let Config = model("Configuracion", new Schema({
+    key: {
+        type: String,
+        unique: true
+    },
+    value: String
 }))
 
 
@@ -174,5 +186,6 @@ export {
     Clientes,
     Facturas,
     ProductoFacturas,
-    MetodoFactura
+    MetodoFactura,
+    Config
 }
