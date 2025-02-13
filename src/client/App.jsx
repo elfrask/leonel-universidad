@@ -104,16 +104,18 @@ class App extends Component {
     state = {
         islogin: false,
         user: "",
+        role:-1,
         loading: true
     }
 
     componentDidMount(cb) {
         reqDB.islogin().then(x=> {
 
-            // console.log(x)
+            console.log(x)
             this.setState({
                 islogin: x.islogin,
                 user: x.user,
+                role: x.role,
                 loading: false
             }, cb||(() => {}))
         })
@@ -143,6 +145,7 @@ class App extends Component {
             }} />
         }
 
+        console.log(this.state)
 
         return(
 
@@ -216,11 +219,11 @@ class App extends Component {
                                     
                                         <div className="nav-control">
                                             <NavTo to="/" img="/src/imgs/nav/dashboard.svg">Panel principal</NavTo>
-                                            <NavTo to="/productos" img="/src/imgs/nav/products.svg">Productos</NavTo>
-                                            <NavTo to="/clientes" img="/src/imgs/nav/clients.svg">Clientes</NavTo>
-                                            <NavTo to="/facturacion" img="/src/imgs/nav/cheks.svg">Facturación</NavTo>
-                                            <NavTo to="/reportes" img="/src/imgs/nav/report.svg">Reportes</NavTo>
-                                            <NavTo to="/conf" img="/src/imgs/nav/conf.svg">Configuraciones</NavTo>
+                                            {[0, 2].includes(this.state.role) &&<NavTo to="/productos" img="/src/imgs/nav/products.svg">Productos</NavTo>}
+                                            {[0, 1].includes(this.state.role) &&<NavTo to="/clientes" img="/src/imgs/nav/clients.svg">Clientes</NavTo>}
+                                            {[0, 1].includes(this.state.role) &&<NavTo to="/facturacion" img="/src/imgs/nav/cheks.svg">Facturación</NavTo>}
+                                            {[0].includes(this.state.role) &&<NavTo to="/reportes" img="/src/imgs/nav/report.svg">Reportes</NavTo>}
+                                            {[0].includes(this.state.role) &&<NavTo to="/conf" img="/src/imgs/nav/conf.svg">Configuraciones</NavTo>}
                                             <div className="navlink-base pointer" onClick={() => {
                                                 document.location.assign("/api/logout")
                                             }}>
@@ -243,12 +246,12 @@ class App extends Component {
                                                 ]}>
                                                 
                                                 </Route>
-                                                <Route path="/productos" element={ <ProductsPage /> }></Route>
-                                                <Route path="/clientes" element={ <ClientPage /> }></Route>
-                                                <Route path="/facturacion" element={ <FacturePage /> }></Route>
-                                                <Route path="/reportes" element={ <ReportPage /> }></Route>
-                                                <Route path="/conf" element={ <ConfPage /> }></Route>
-                                                <Route index path="/viewfacture" element={ <ViewFacturePage /> }></Route>
+                                                {[0, 2].includes(this.state.role) &&<Route path="/productos" element={ <ProductsPage /> }></Route>}
+                                                {[0, 1].includes(this.state.role) &&<Route path="/clientes" element={ <ClientPage /> }></Route>}
+                                                {[0, 1].includes(this.state.role) &&<Route path="/facturacion" element={ <FacturePage /> }></Route>}
+                                                {[0].includes(this.state.role) &&<Route path="/reportes" element={ <ReportPage /> }></Route>}
+                                                {[0].includes(this.state.role) &&<Route path="/conf" element={ <ConfPage /> }></Route>}
+                                                {[0, 1].includes(this.state.role) &&<Route index path="/viewfacture" element={ <ViewFacturePage /> }></Route>}
                                             </Routes>
                                         </div>
                                     </>

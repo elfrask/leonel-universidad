@@ -181,7 +181,8 @@ let reqDB = {
                     
                     res({
                         islogin: y.islogin,
-                        user: y.user
+                        user: y.user,
+                        role: y.role
                     })
                     
                 })

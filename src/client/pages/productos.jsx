@@ -202,104 +202,107 @@ class ProductsPage extends Component {
                 }
             }}>
 
+                {
+                    !this.props.select &&
+                    <div className="top-control">
+                        <form onSubmit={(e) => {
+                            e.defaultPrevented();
 
-                <div className="top-control">
-                    <form onSubmit={(e) => {
-                        e.defaultPrevented();
-
-                        
-                    }}>
-                        <h2 className="title-page">
-                            Productos
-                        </h2>
-                        
-                        <input type="number" className="_input" min={0} ref={this.state._id} placeholder="id del producto" title="Id del producto"
-                            readOnly={this.state.rowIndex !== -1}
-                        />
-                        <input type="text" className="_input" ref={this.state._name} placeholder="Nombre del producto"  title="Nombre del producto"/>
-                        <input type="number" className="_input" min={0} ref={this.state._stock} placeholder="Cantidad/Stock disponible"  title="Cantidad/Stock disponible"/>
-                        <input type="number" className="_input" min={0} ref={this.state._price} placeholder="Precio en Bs."  title="Precio en Bs."/>
-                        <select defaultValue={1} ref={this.state._enable} className="_input" title="Estado del producto">
-                            <option value={0}>Desactivado</option>
-                            <option value={1}>Activado</option>
-                        </select>
-                        <br />
-                        <br />
-                        {
-                            (
-                                this.state.rowIndex === -1
-                            )?(
-                                <input type="button" className="_submit" value={"Agregar"} onClick={() => {
-
-                                    let error = this.validar()
-                                    // console.log(yeah)
-
-                                    if (!error) {
-                                        let data = this.get_formData();
-
-                                        reqDB.query(reqDB.METHODS.create, "products", data).then(x=> {
-                                            if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
-                                                console.log("fallo")
-                                                return
-                                            };
-
-                                            msg.success("El producto fue agregado exitosamente")
-
-                                            this.reset_caps()
-                                            this.cargar()
-                                        })
-                                        
-                                    }
-
-                                }} />
-
-                            ):(
-                                <>
-                                    <input type="button" className="_submit" value="Actualizar"  onClick={() => {
+                            
+                        }}>
+                            <h2 className="title-page">
+                                Productos
+                            </h2>
+                            
+                            <input type="number" className="_input" min={0} ref={this.state._id} placeholder="id del producto" title="Id del producto"
+                                readOnly={this.state.rowIndex !== -1}
+                            />
+                            <input type="text" className="_input" ref={this.state._name} placeholder="Nombre del producto"  title="Nombre del producto"/>
+                            <input type="number" className="_input" min={0} ref={this.state._stock} placeholder="Cantidad/Stock disponible"  title="Cantidad/Stock disponible"/>
+                            <input type="number" className="_input" min={0} ref={this.state._price} placeholder="Precio en Bs."  title="Precio en Bs."/>
+                            <select defaultValue={1} ref={this.state._enable} className="_input" title="Estado del producto">
+                                <option value={0}>Desactivado</option>
+                                <option value={1}>Activado</option>
+                            </select>
+                            <br />
+                            <br />
+                            {
+                                (
+                                    this.state.rowIndex === -1
+                                )?(
+                                    <input type="button" className="_submit" value={"Agregar"} onClick={() => {
 
                                         let error = this.validar()
-                                        // console.log(error)
+                                        // console.log(yeah)
 
                                         if (!error) {
                                             let data = this.get_formData();
 
-                                            reqDB.query(reqDB.METHODS.update, "products", {id: this.state._id.current.valueAsNumber}, data).then(x=> {
-                                                // if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
-                                                //     console.log("fallo")
-                                                //     return
-                                                // };
-                                                if (x.error) {
-                                                    msg.error("Algo ha salido mal...")
+                                            reqDB.query(reqDB.METHODS.create, "products", data).then(x=> {
+                                                if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
+                                                    console.log("fallo")
                                                     return
-                                                }
+                                                };
 
-                                                msg.success("El producto fue actualizado exitosamente")
+                                                msg.success("El producto fue agregado exitosamente")
 
-                                                // this.reset_caps()
+                                                this.reset_caps()
                                                 this.cargar()
                                             })
                                             
                                         }
 
-                                        }}/>
-                                    {/* <input type="button" className="_submit red" value="Eliminar" /> */}
-                                    <input type="button" className="_submit red" value="Cancelar" onClick={() => {
-                                        this.reset_caps()
                                     }} />
 
-                                    <input type="button" className={"_submit " + (this.props.select?"":"hide")} value="Seleccionar este producto"  onClick={() => {
+                                ):(
+                                    <>
+                                        <input type="button" className="_submit" value="Actualizar"  onClick={() => {
 
-                                        let pre_data = this.get_formData();
+                                            let error = this.validar()
+                                            // console.log(error)
 
-                                        this.select(pre_data, true, this.props.onSelect)
+                                            if (!error) {
+                                                let data = this.get_formData();
 
-                                    }}/>
+                                                reqDB.query(reqDB.METHODS.update, "products", {id: this.state._id.current.valueAsNumber}, data).then(x=> {
+                                                    // if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
+                                                    //     console.log("fallo")
+                                                    //     return
+                                                    // };
+                                                    if (x.error) {
+                                                        msg.error("Algo ha salido mal...")
+                                                        return
+                                                    }
 
-                                </>
-                            )
-                        }
-                    </form>
-                </div>
+                                                    msg.success("El producto fue actualizado exitosamente")
+
+                                                    // this.reset_caps()
+                                                    this.cargar()
+                                                })
+                                                
+                                            }
+
+                                            }}/>
+                                        {/* <input type="button" className="_submit red" value="Eliminar" /> */}
+                                        <input type="button" className="_submit red" value="Cancelar" onClick={() => {
+                                            this.reset_caps()
+                                        }} />
+
+                                        <input type="button" className={"_submit " + (this.props.select?"":"hide")} value="Seleccionar este producto"  onClick={() => {
+
+                                            let pre_data = this.get_formData();
+
+                                            this.select(pre_data, true, this.props.onSelect)
+
+                                        }}/>
+
+                                    </>
+                                )
+                            }
+                        </form>
+                    </div>
+                }
+
 
                 <div className="top-control">
                     <h3 className="title-page">

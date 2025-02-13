@@ -44,8 +44,10 @@ function user_verify(cookie = {user:"", islogin:true, pass:""}) {
                     cookie,
                     Usuario: {
                         user: "admin",
-                        pass: "process.env.ADMIN_PASS"
+                        pass: "process.env.ADMIN_PASS",
+                        role: 0,
                     },
+                    islogin: true
 
                 })
 
@@ -668,9 +670,10 @@ api.get("/islogin", async (req, res) => {
     
 
     user_verify(req.session).then(x=> {
-
+        // console.log(x)
         res.json({
             user: req.session.user,
+            role: x.Usuario.role,
             islogin: true
         })
     })
