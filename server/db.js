@@ -8,18 +8,17 @@ configDotenv();
 mongoose.connect(process.env.MONGO)
 
 
-let Productos = model("Producto", new Schema({
+let PreProducto =  new Schema({
     id: {
         type: Number,
-        unique: true,
-        required: true
     },
     name: String,
     price: Number,
     stock: Number,
     enable: Number,
-    
-}))
+
+})
+
 
 let Counters = model("Counter", new Schema({
     key: {
@@ -44,6 +43,7 @@ let Clientes = model("Cliente", new Schema({
     },
     name: String,
     address: String,
+    email: String,
     phone: String,
 }))
 
@@ -154,11 +154,14 @@ let gen_pre_save = (name_counter) => {
 pre_Facturas.pre("save", gen_pre_save("id_factura"))
 pre_Metodos_factura.pre("save", gen_pre_save("id_factura_metodo"))
 pre_Productos_factura.pre("save", gen_pre_save("id_factura_producto"))
+PreProducto.pre("save", gen_pre_save("id_producto"))
 
 
 let Facturas = model("Factura", pre_Facturas)
 let ProductoFacturas = model("Productos_Factura", pre_Productos_factura)
 let MetodoFactura = model("Metodos_Factura", pre_Metodos_factura)
+let Productos = model("Producto", PreProducto)
+
 
 // ============================================================================================
 // ============================================================================================

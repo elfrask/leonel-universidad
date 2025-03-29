@@ -357,6 +357,42 @@ let USER_ROLE = {
     ]
 }
 
+function validarNumeroFloat(event) {
+    
+    // // Permite números y un solo punto decimal
+    // input.value = input.value.replace(/[^0-9.]/g, '');
+    // // Asegura que solo haya un punto decimal
+    // input.value = input.value.replace(/(\..*)\./g, '$1');
+
+    if (event.key === 'Backspace' || event.key === 'Tab' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        return true;
+    }
+
+    // Permitir solo números (0-9)
+    if (!/[0-9.,]/.test(event.key)) {
+        event.preventDefault();
+        return false;
+    }
+
+    return true;
+
+}
+
+function validarNumeroEntero(event) {
+    // Permitir teclas de control como retroceso, tab, flechas, etc.
+    if (event.key === 'Backspace' || event.key === 'Tab' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        return true;
+    }
+
+    // Permitir solo números (0-9)
+    if (!/[0-9]/.test(event.key)) {
+        event.preventDefault();
+        return false;
+    }
+
+    return true;
+}
+
 
 export {
     go,
@@ -370,5 +406,7 @@ export {
     CONVERSION,
     WATERMARK,
     SpanData,
-    USER_ROLE
+    USER_ROLE,
+    validarNumeroEntero,
+    validarNumeroFloat
 }

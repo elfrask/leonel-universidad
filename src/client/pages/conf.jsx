@@ -1,6 +1,6 @@
 import { Component, createRef } from "react";
 import { Table } from "antd";
-import { go, msg, np_validar, range, reqDB, USER_ROLE } from "../base";
+import { go, msg, np_validar, range, reqDB, USER_ROLE, validarNumeroFloat } from "../base";
 
 const columns = [
     { title: 'Usuario', dataIndex: 'user', key: 'user' },
@@ -226,7 +226,7 @@ class ConfPage extends Component {
                     <div className="_title">
                         Precio del Dolar en Bs:
                     </div>
-                    <input type="number" value={this.state.dolar} id="dolar" className="_input" placeholder="Dolar" title="Dolar" onChange={(x) => {
+                    <input type="number" onKeyDown={validarNumeroFloat} value={this.state.dolar} id="dolar" className="_input" placeholder="Dolar" title="Dolar" onChange={(x) => {
                         this.setState({
                             dolar: x.target.value
                         })
@@ -234,7 +234,7 @@ class ConfPage extends Component {
                     <div className="_title">
                         IVA en %:
                     </div>
-                    <input type="number" value={this.state.iva} id="iva" className="_input" placeholder="IVA" title="IVA" onChange={(x) => {
+                    <input type="number" value={this.state.iva} onKeyDown={validarNumeroFloat} id="iva" className="_input" placeholder="IVA" title="IVA" onChange={(x) => {
                         this.setState({
                             iva: x.target.value
                         })
@@ -242,7 +242,7 @@ class ConfPage extends Component {
                     <div className="_title">
                         IGTF en %:
                     </div>
-                    <input type="number" value={this.state.igtf} id="igtf" className="_input" placeholder="IGTF" title="IGTF" onChange={(x) => {
+                    <input type="number" value={this.state.igtf} onKeyDown={validarNumeroFloat} id="igtf" className="_input" placeholder="IGTF" title="IGTF" onChange={(x) => {
                         this.setState({
                             igtf: x.target.value
                         })

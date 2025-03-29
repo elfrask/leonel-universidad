@@ -120,6 +120,14 @@
   justify-content: center;
 }
 
+.bg {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* container-type: scroll-state; */
+  
+}
+
 ._row-table-antd {
   background-color: var(--bg-color);
   color: var(--font-color);
@@ -154,6 +162,10 @@
   box-shadow: 0px 0px 20px gray;
   padding: 20px;
   /* display: flex; */
+}
+
+.ant-modal-content {
+  border-radius: 20px !important;
 }
 
 .center-text {

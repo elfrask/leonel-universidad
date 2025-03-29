@@ -1,6 +1,6 @@
 import { Component, createRef } from "react";
 import { Table } from "antd";
-import { debug_log, go, msg, np_validar, range, reqDB } from "../base";
+import { debug_log, go, msg, np_validar, range, reqDB, validarNumeroEntero, validarNumeroFloat } from "../base";
 
 const columns = [
     { title: 'Cédula', dataIndex: 'ci', key: 'ci' },
@@ -25,6 +25,7 @@ class ClientPage extends Component {
             _name: createRef(),
             _address: createRef(),
             _phone: createRef(),
+            _email: createRef(),
             
         }
     }
@@ -43,6 +44,7 @@ class ClientPage extends Component {
         _name: createRef(),
         _address: createRef(),
         _phone: createRef(),
+        _email: createRef(),
         
         data: [],
         filter_mode: 0,
@@ -81,6 +83,7 @@ class ClientPage extends Component {
             this.state._ci.current.valueAsNumber = x.data.ci;
             this.state._address.current.value = x.data.address;
             this.state._phone.current.value = x.data.phone;
+            this.state._email.current.value = x.data.email||"";
 
             this.setState({rowIndex: element.key})
         })
@@ -93,6 +96,7 @@ class ClientPage extends Component {
         this.state._name.current.value = ""
         this.state._ci.current.value = ""
         this.state._address.current.value = ""
+        this.state._email.current.value = ""
         this.state._phone.current.value = ""
         this.setState({rowIndex: -1})
     }
@@ -135,6 +139,21 @@ class ClientPage extends Component {
 
             
         ]
+
+
+        if (this.state._email.current.value !== "") {
+            let _email = this.state._email.current.value;
+
+            results.push(
+                np_validar(
+                    !(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(_email)), 
+                    this.state._email.current, 
+                    "_required", 
+                    "El correo ingresado no es un correo valido"
+                )
+            )
+        }
+
         results = results.map(x=> Boolean(x))
         // console.log("result", results)
         // console.log("results.includes(true)", results.includes(true))
@@ -159,6 +178,8 @@ class ClientPage extends Component {
             phone: this.state._phone.current.value,
             address: this.state._address.current.value,
             name: this.state._name.current.value,
+            email: this.state._email.current.value,
+        
             // enable: parseInt(this.state._enable.current.value)
         }
     }
@@ -210,12 +231,19 @@ class ClientPage extends Component {
                             Clientes
                         </h2>
                         
-                        <input type="number" className="_input" min={0} ref={this.state._ci} placeholder="Cédula" title="Cédula"
+                        <div className="_title">Cédula del cliente:</div>
+
+                        <input type="number" className="_input" min={0} onKeyDown={validarNumeroEntero} ref={this.state._ci} placeholder="Cédula" title="Cédula"
                             readOnly={this.state.rowIndex !== -1}
                         />
+                        <div className="_title">Nombre y apellido:</div>
                         <input type="text" className="_input" ref={this.state._name} placeholder="Nombre y apellido"  title="Nombre y apellido"/>
-                        <input type="text" className="_input" min={0} ref={this.state._address} placeholder="Dirección"  title="Dirección"/>
-                        <input type="text" className="_input" min={0} ref={this.state._phone} placeholder="Teléfono"  title="Teléfono"/>
+                        <div className="_title">Dirección:</div>
+                        <input type="text" className="_input" ref={this.state._address} placeholder="Dirección"  title="Dirección"/>
+                        <div className="_title">Correo electrónico (opcional):</div>
+                        <input type="text" className="_input" ref={this.state._email} placeholder="Correo electrónico (opcional)"  title="Correo electrónico (opcional)"/>
+                        <div className="_title">Teléfono:</div>
+                        <input type="text" className="_input" ref={this.state._phone} onKeyDown={validarNumeroEntero} placeholder="Teléfono"  title="Teléfono"/>
                         
                         <br />
                         <br />
@@ -342,6 +370,7 @@ class ClientPage extends Component {
                                 onClick:(row) => {
                                     if (this.state.rowIndex !== e.key) this.select(e);
                                     else this.reset_caps()
+                                    console.log("select:", e)
 
                                     // console.log(e)
                                 },

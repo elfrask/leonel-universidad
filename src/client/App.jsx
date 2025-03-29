@@ -75,18 +75,27 @@ class Dashboard extends Component {
 
 
         return(
-            <div className="container center">
+            <div className="container">
                 <div className="top-control">
                     <h3 className="center-text">
                         ¡Bienvenido '{this.props.username}'!
                     </h3>
                 </div>
-                <div className="simple-box">
+                <div className="top-control">
                     <p>
                         {"<-------------------"}
                         <br />
                         A la izquierda de este contenedor podra acceder a los diferentes apartados del sistema
                     </p>
+                </div>
+                <div className="top-control">
+                    <iframe src="/src/client/assets/manual.pdf"  frameborder="0"
+                        style={{
+                            width:"100%",
+                            minWidth:"600px",
+                            minHeight:"95vh"
+                        }}
+                    ></iframe>
                 </div>
                 
                 
@@ -152,7 +161,10 @@ class App extends Component {
             <div className="marco">
                 {
                     !this.state.islogin?(
-                        <div className="container medio">
+                        <div className="container medio bg" style={{
+                            backgroundImage:`url("/src/imgs/bg.png")`,
+                            backgroundColor: "#0056fe" //"rgb(93 39 5)"
+                        }}>
                             <div className="login-box">
                                 <form onSubmit={(e) => {
                                     e.preventDefault();

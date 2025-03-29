@@ -1,6 +1,6 @@
 import { Component, createRef } from "react";
 import { Table, Descriptions } from "antd";
-import { go, METODOSDEPAGO, msg, np_validar, range, reqDB, splash, WATERMARK, SpanData } from "../base";
+import { go, METODOSDEPAGO, msg, np_validar, range, reqDB, splash, WATERMARK, SpanData, validarNumeroEntero } from "../base";
 import { PREViewFactureTextPlainComponent } from "./facturas";
 import Dayjs from "dayjs";
 import { clamp } from "lodash";
@@ -374,7 +374,7 @@ class PREViewReportTextPlainComponent extends Component {
                 <SpanData title="Desde:" right={`${Desde.format("DD/MM/YYYY")}`}></SpanData>
                 <SpanData title="Hasta:" right={`${Hasta.format("DD/MM/YYYY")}`}></SpanData>
                 <SpanData title="Numero de pedidos:" right={NUM_PEDIDOS}></SpanData>
-                <SpanData title="TOTAL:" right={`Bs. ${TOTAL}`}></SpanData>
+                <SpanData title="TOTAL:" right={`Bs. ${TOTAL.toFixed(2)}`}></SpanData>
 
 
 
@@ -627,6 +627,55 @@ class ReportPage extends Component {
             }
         })
 
+
+        let ReportButton = () => {
+            
+
+            return(
+                <input type="button" className="_submit" value="Imprimir reporte" onClick={() => {
+
+                    splash.open(
+                        <div className="container">
+
+                            <div className="top-control" style={{
+                                height: "max-content"
+                            }}>
+                                <input type="button" className="_submit" value="Imprimir reporte" onClick={X=> {
+                                    // console.log(e)
+                                    let win =open("/rpp", "Imprimir", 'width=800,height=600')
+
+                                    win.addEventListener("load", (x) => {
+                                        win.window.onPass = (obj) => {
+                                            // console.log("llego")
+
+                                            obj.pass({
+                                                productos: this.state.productos,
+                                                facturas: this.state.facturas,
+                                            })
+                                        }
+                                    })
+                                }}/>
+
+                                <hr />
+                                <br />
+                                
+                                <PREViewReportTextPlainComponent
+                                    productos={this.state.productos}
+                                    facturas={this.state.facturas}
+                                />
+
+                            </div>
+                            <br />
+                            <br />
+
+                        </div>
+                    )
+
+                }} />
+            )
+        }
+        
+
         return(
             <div className="container page" onKeyDown={(e) => {
                 
@@ -729,7 +778,7 @@ class ReportPage extends Component {
                                         <div className="_title">
                                             Año:
                                         </div>
-                                        <input type="number" className="_input" value={this.state.year} placeholder="Año" onChange={(x) => {
+                                        <input type="number" className="_input" onKeyDown={validarNumeroEntero} value={this.state.year} placeholder="Año" onChange={(x) => {
                                             
                                             if (isNaN(x.target.valueAsNumber)) {
                                                 return msg.warning("Expresión no valida")
@@ -748,7 +797,7 @@ class ReportPage extends Component {
                                         <div className="_title">
                                             Año:
                                         </div>
-                                        <input type="number" className="_input" value={this.state.year} placeholder="Año" onChange={(x) => {
+                                        <input type="number" onKeyDown={validarNumeroEntero} className="_input" value={this.state.year} placeholder="Año" onChange={(x) => {
                                             
                                             if (isNaN(x.target.valueAsNumber)) {
                                                 return msg.warning("Expresión no valida")
@@ -817,6 +866,9 @@ class ReportPage extends Component {
                             this.filtrar(PROTOCOLOS[this.state.filter])
 
                         }} />
+                        {
+                            ReportButton()
+                        }
 
                         
                     </form>
@@ -1026,46 +1078,7 @@ class ReportPage extends Component {
                         Gestión
                     </h2>
                     <hr />
-                    <input type="button" className="_submit" value="Imprimir reporte" onClick={() => {
-
-                        splash.open(
-                            <div className="container">
-
-                                <div className="top-control" style={{
-                                    height: "max-content"
-                                }}>
-                                    <input type="button" className="_submit" value="Imprimir reporte" onClick={X=> {
-                                        // console.log(e)
-                                        let win =open("/rpp", "Imprimir", 'width=800,height=600')
-
-                                        win.addEventListener("load", (x) => {
-                                            win.window.onPass = (obj) => {
-                                                // console.log("llego")
-
-                                                obj.pass({
-                                                    productos: this.state.productos,
-                                                    facturas: this.state.facturas,
-                                                })
-                                            }
-                                        })
-                                    }}/>
-
-                                    <hr />
-                                    <br />
-                                    
-                                    <PREViewReportTextPlainComponent
-                                        productos={this.state.productos}
-                                        facturas={this.state.facturas}
-                                    />
-
-                                </div>
-                                <br />
-                                <br />
-
-                            </div>
-                        )
-
-                    }} />
+                    { ReportButton() }
 
                 </div>
 

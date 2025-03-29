@@ -1,8 +1,8 @@
 import { Component, createRef } from "react";
-import { go, np_validar, msg, reqDB, splash, METODOSDEPAGO, CONVERSION, debug_log, WATERMARK, SpanData } from "../base"; 
+import { go, np_validar, msg, reqDB, splash, METODOSDEPAGO, CONVERSION, debug_log, WATERMARK, SpanData, validarNumeroFloat } from "../base"; 
 import { ClientPage } from "./clientes";
 import { ProductsPage } from "./productos";
-import { Table, Dropdown, Menu, Descriptions, message } from "antd";
+import { Table, Dropdown, Menu, Descriptions, message, Modal } from "antd";
 import Dayjs from "dayjs"
 import { method, range } from "lodash";
 import withRouter from "../components/withRouter";
@@ -383,7 +383,7 @@ class PREFacturePage extends Component {
                             </div>
                         )
                     }
-                    <input type="number" ref={this.state.cantidad} className="_input" placeholder="Cantidad" title="Cantidad"/>
+                    <input type="number" ref={this.state.cantidad} className="_input" onKeyDown={validarNumeroFloat} placeholder="Cantidad" title="Cantidad"/>
                     <hr />
                     <input type="button" className="_submit" value="Agregar" onClick={() => {
 
@@ -484,7 +484,7 @@ class PREFacturePage extends Component {
                         Agrega método de pago
                     </h3>
                     <h4 className="title-page">
-                        Pago restante: Bs. {(SUBTOTAL - PAGO_RESTANTE).toFixed(2)}
+                        Pago restante: Bs. {(TOTAL - PAGO_RESTANTE).toFixed(2)}
 
                     </h4>
                     <select className="_input" value={this.state.metodo_pago} id="_methodPay" onChange={x=>{
@@ -525,10 +525,15 @@ class PREFacturePage extends Component {
                                     label:"Auto completar con la conversion en: " + METODOSDEPAGO[this.state.metodo_pago]?.divisa,
                                     onClick:(e) => {
 
-                                        let restante = (SUBTOTAL - PAGO_RESTANTE).toFixed(2)
+                                        let restante = (TOTAL - PAGO_RESTANTE)
                                         let conversion =  CONVERSION.divisa_value[
                                             METODOSDEPAGO[this.state.metodo_pago].divisa
                                         ]
+
+                                        if (conversion !== 1) {
+                                            
+                                            restante = restante * ((0.01 * this.state.IGTF) + 1)
+                                        }
                                         
                                         
                                         this.setState({
@@ -540,7 +545,7 @@ class PREFacturePage extends Component {
                         }}
                     >
 
-                        <input type="number" id="_cantPay" className="_input" placeholder="Pago en divisas/Bs. de acuerdo al método" title="Pago en divisas/Bs. de acuerdo al método" value={this.state.cantidad_pago} onChange={(x) => {
+                        <input type="number" id="_cantPay" className="_input" onKeyDown={validarNumeroFloat} placeholder="Pago en divisas/Bs. de acuerdo al método" title="Pago en divisas/Bs. de acuerdo al método" value={this.state.cantidad_pago} onChange={(x) => {
                             let {value: cant, value: text} = x.target;
 
                             if (!isNaN(cant) | text === "") {
@@ -585,7 +590,7 @@ class PREFacturePage extends Component {
                         this.metodos_de_pago.push(MethodData(
                             this.state.metodo_pago,
                             NumberCantidadPago,
-                            Number(parseInt(NumberCantidadPago * CONVERSION.divisa_value[
+                            Number(parseFloat(NumberCantidadPago * CONVERSION.divisa_value[
                                 METODOSDEPAGO[this.state.metodo_pago].divisa
                             ])),
                             METODOSDEPAGO[this.state.metodo_pago].divisa
@@ -609,13 +614,15 @@ class PREFacturePage extends Component {
                         // style={{height: "400px", overflow:"auto"}}
                         
                         dataSource={this.metodos_de_pago.map((x, i)=> {
+
+                            console.log(x)
                             
                             return {
                                 ...x, 
                                 key: i, 
                                 name: METODOSDEPAGO[x.method].name,
-                                format: METODOSDEPAGO[x.method].format.replace("{n}", x.pay),
-                                total_format: `Bs. ${x.total}`
+                                format: METODOSDEPAGO[x.method].format.replace("{n}", (x.pay).toFixed(2)),
+                                total_format: `Bs. ${x.total.toFixed(2)}`
                                 
                             }
                         })} 
@@ -709,6 +716,9 @@ class PREFacturePage extends Component {
                     <hr />
                     <input type="button" value="Generar factura" className="_submit" onClick={x=>{
 
+                        
+
+
                         if ((this.state.client === "") | (this.state.client === 0)) {
                             
                             return msg.error("Debes seleccionar un cliente")
@@ -724,57 +734,75 @@ class PREFacturePage extends Component {
                             return msg.error("Debes establecer métodos de pago para proceder")
                         }
 
-                        if ((SUBTOTAL - PAGO_RESTANTE).toFixed(0) > 2) {
-                            return msg.warning(`No haz establecido un pago completo, aun queda Bs. ${(SUBTOTAL - PAGO_RESTANTE).toFixed(2)} restante`)
+                        if ((TOTAL - PAGO_RESTANTE).toFixed(0) > 2) {
+                            return msg.warning(`No haz establecido un pago completo, aun queda Bs. ${(TOTAL - PAGO_RESTANTE).toFixed(2)} restante`)
                             
                         }
 
                         // return msg.success("Factura generada exitosamente")
 
-                        msg.MessageApi.loading({
-                            content:"Generando factura",
-                            key:923,
-                            duration: 1000
+                       
+                        let a = Modal.confirm({
+                            onOk:(y) => {
+
+                                msg.MessageApi.loading({
+                                    content:"Generando factura",
+                                    key:923,
+                                    duration: 1000
+                                })
+                                
+        
+                                reqDB.gen_facture(
+                                    this.state.client,
+        
+                                    this.state.IVA,
+                                    this.state.IGTF,
+        
+                                    IVA_BS,
+                                    IGTF_SUMATORY,
+                                    TOTAL,
+                                    SUBTOTAL,
+                                    USD,
+                                    this.data_products,
+                                    this.metodos_de_pago,
+        
+                                    this.state.nota
+                                ).then(x=> {
+        
+                                    if (x.error) {
+                                        return msg.error("No posees permisos para ejecutar esta acción")
+                                    }
+        
+                                    msg.MessageApi.destroy(923)
+                                    msg.success("La factura a sido generada exitosamente")
+        
+        
+        
+                                    this.props.navigate(`/viewfacture?id=${x.data.facture_id}`, {})
+        
+                                })
+                                .catch(x=> {
+        
+                                    console.log(x)
+        
+                                    msg.MessageApi.destroy(923)
+                                    msg.error("Algo mal ha ocurrido...")
+        
+                                })
+                                a.destroy()
+
+
+                            },
+                            onCancel:(y) => {
+                                a.destroy()
+                                
+                            },
+                            type:"confirm",
+                            content:"Estas a punto de generar una factura, una vez que se genere ya no se podrá eliminar, estas seguro de generar esta factura?",
+                            title:"Generar factura"
                         })
                         
 
-                        reqDB.gen_facture(
-                            this.state.client,
-
-                            this.state.IVA,
-                            this.state.IGTF,
-
-                            IVA_BS,
-                            IGTF_SUMATORY,
-                            TOTAL,
-                            SUBTOTAL,
-                            USD,
-                            this.data_products,
-                            this.metodos_de_pago,
-
-                            this.state.nota
-                        ).then(x=> {
-
-                            if (x.error) {
-                                return msg.error("No posees permisos para ejecutar esta acción")
-                            }
-
-                            msg.MessageApi.destroy(923)
-                            msg.success("La factura a sido generada exitosamente")
-
-
-
-                            this.props.navigate(`/viewfacture?id=${x.data.facture_id}`, {})
-
-                        })
-                        .catch(x=> {
-
-                            console.log(x)
-
-                            msg.MessageApi.destroy(923)
-                            msg.error("Algo mal ha ocurrido...")
-
-                        })
                     }} />
                 </div>
 

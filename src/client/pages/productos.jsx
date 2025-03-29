@@ -1,14 +1,10 @@
 import { Component, createRef } from "react";
-import { Table } from "antd";
-import { go, msg, np_validar, range, reqDB } from "../base";
+import { Table, Modal, Button } from "antd";
+import { go, msg, np_validar, range, reqDB, validarNumeroEntero, validarNumeroFloat,  } from "../base";
 
-const columns = [
-    { title: 'Codigo', dataIndex: 'id', key: 'id' },
-    { title: 'Nombre Producto', dataIndex: 'name', key: 'name' },
-    { title: 'Disponible', dataIndex: 'stock', key: 'stock' },
-    { title: 'Precio', dataIndex: 'price', key: 'price' },
-    { title: 'Estado', dataIndex: 'enable', key: 'enable' },
-];
+
+
+
 
 
 
@@ -26,6 +22,10 @@ class ProductsPage extends Component {
             _stock: createRef(),
             _price: createRef(),
             _enable: createRef(),
+        }
+
+        if (props.select) {
+            this.columns.pop()
         }
     }
 
@@ -53,13 +53,18 @@ class ProductsPage extends Component {
         
     }
 
+    columns = [
+        { title: 'Codigo', dataIndex: 'id', key: 'id' },
+        { title: 'Nombre Producto', dataIndex: 'name', key: 'name' },
+        { title: 'Disponible', dataIndex: 'stock', key: 'stock' },
+        { title: 'Precio', dataIndex: 'price', key: 'price' },
+        { title: 'Estado', dataIndex: 'enable', key: 'enable' },
+    ]
+
     cargar() {
         reqDB.query(reqDB.METHODS.loadAll, "products", {}, {}).then(y=>{
             // console.log(y)
-            y.data.map((x, i) => {
-                x.key = i;
-                x.enable = x.enable ?"Activado":"Desactivado"
-            })
+            
             this.setState({data: y.data})
             // console.log(y)
         })
@@ -84,7 +89,7 @@ class ProductsPage extends Component {
 
             this.state._name.current.value = x.data.name;
             this.state._id.current.valueAsNumber = x.data.id;
-            this.state._stock.current.valueAsNumber = x.data.stock;
+            this.state._stock.current.value = x.data.stock;
             this.state._price.current.valueAsNumber = x.data.price;
             this.state._enable.current.valueAsNumber = x.data.enable;
 
@@ -103,6 +108,7 @@ class ProductsPage extends Component {
     }
 
     componentDidMount() {
+        
         this.cargar()
     }
 
@@ -110,12 +116,12 @@ class ProductsPage extends Component {
 
 
         let results = [
-            np_validar(
-                (this.state._id.current.valueAsNumber < 0) | (isNaN(this.state._id.current.valueAsNumber)), 
-                this.state._id.current, 
-                "_required", 
-                "El id del producto no es valido"
-            ),
+            // np_validar(
+            //     (this.state._id.current.valueAsNumber < 0) | (isNaN(this.state._id.current.valueAsNumber)), 
+            //     this.state._id.current, 
+            //     "_required", 
+            //     "El id del producto no es valido"
+            // ),
     
             np_validar(
                 this.state._name.current.value.length < 5, 
@@ -125,7 +131,7 @@ class ProductsPage extends Component {
             ),
     
             np_validar(
-                (this.state._stock.current.valueAsNumber < 0) | (isNaN(this.state._stock.current.valueAsNumber)), 
+                (Number(this.state._stock.current.value) < 0) | (isNaN(Number(this.state._stock.current.value))), 
                 this.state._stock.current, 
                 "_required", 
                 "El stock ingresado es negativo o no es un numero"
@@ -160,7 +166,7 @@ class ProductsPage extends Component {
         return {
             id: this.state._id.current.valueAsNumber,
             price: this.state._price.current.valueAsNumber,
-            stock: this.state._stock.current.valueAsNumber,
+            stock: Number(this.state._stock.current.value),
             name: this.state._name.current.value,
             enable: parseInt(this.state._enable.current.value)
         }
@@ -191,6 +197,12 @@ class ProductsPage extends Component {
             
         })
 
+        if (this.props.select) {
+            filtro = filtro.filter(x=> {
+                return x.enable
+            })
+        }
+
 
         return(
             <div className="container page" onKeyDown={(e) => {
@@ -214,12 +226,111 @@ class ProductsPage extends Component {
                                 Productos
                             </h2>
                             
-                            <input type="number" className="_input" min={0} ref={this.state._id} placeholder="id del producto" title="Id del producto"
-                                readOnly={this.state.rowIndex !== -1}
+                            <div className="_title">ID del producto:</div>
+                            <input type="number" className="_input" onKeyDown={validarNumeroEntero} min={0} ref={this.state._id} placeholder="ID del producto (automático)" title="ID del producto (automático)"
+                                readOnly={true}
                             />
+                            <div className="_title">Nombre del producto:</div>
                             <input type="text" className="_input" ref={this.state._name} placeholder="Nombre del producto"  title="Nombre del producto"/>
-                            <input type="number" className="_input" min={0} ref={this.state._stock} placeholder="Cantidad/Stock disponible"  title="Cantidad/Stock disponible"/>
-                            <input type="number" className="_input" min={0} ref={this.state._price} placeholder="Precio en Bs."  title="Precio en Bs."/>
+                            <div className="_title">Cantidad/Disponibilidad:</div>
+                            {
+                                (this.state.rowIndex === -1) ? (
+                                    <input type="number" key={"stock-field"} className="_input" min={0} onKeyDown={validarNumeroFloat} ref={this.state._stock} placeholder="Cantidad/Stock disponible"  title="Cantidad/Stock disponible"/>
+                                ):(
+                                    <input type="Button" key={"stock-field"} className="_submit" min={0} onKeyDown={validarNumeroFloat} ref={this.state._stock} title="Cantidad/Stock disponible"
+                                        style={{
+                                            textAlign:"left",
+                                            width:"100%",
+                                            padding:"12px"
+                                        }}
+                                        onClick={x=> {
+
+                                            let _a = Modal.confirm({
+                                                title:"Agregar o quitar elementos",
+                                                content: (
+                                                    <>
+                                                        <div className="_title">Coloca la cantidad de elementos que deseas agregar o quitar del stock:</div>
+                                                        <div className="_title">Cantidad actual: {this.state._stock.current.value}</div>
+                                                        <input type="number" id="__add_stock" min={0} className="_input" onKeyDown={validarNumeroFloat} placeholder="Agregar o quitar"/>
+                                                    </>
+                                                ),
+                                                footer: (_, {OkBtn, CancelBtn}) => {
+                                                    return(
+                                                        <>
+                                                            <CancelBtn />
+                                                            <Button type="primary" value="Ok" onClick={(h) => {
+                                                                let _add = go("__add_stock").valueAsNumber;
+                                                    
+                                                    
+                                                                if (!np_validar(
+                                                                    isNaN(_add),
+                                                                    go("__add_stock"),
+                                                                    "_required",
+                                                                    "Debe de colocar un numero valido y mayor a 0"
+                                                                )) {
+            
+                                                                    let _amount = Number(this.state._stock.current.value)
+            
+                                                                    this.state._stock.current.value = (_amount + _add)
+                                                                    
+                                                                    _a.destroy()
+                                                                }
+                                                            }}>
+                                                                Agregar
+                                                            </Button>
+                                                            <Button type="primary" value="Ok" onClick={(h) => {
+                                                                let _add = go("__add_stock").valueAsNumber;
+                                                    
+                                                    
+                                                                if (!np_validar(
+                                                                    isNaN(_add),
+                                                                    go("__add_stock"),
+                                                                    "_required",
+                                                                    "Debe de colocar un numero valido y mayor a 0"
+                                                                )) {
+            
+                                                                    let _amount = Number(this.state._stock.current.value)
+            
+                                                                    this.state._stock.current.value = (_amount - _add)
+                                                                    
+                                                                    _a.destroy()
+                                                                }
+                                                            }}>
+                                                                Quitar
+                                                            </Button>
+                                                            <Button type="primary" value="Ok" onClick={(h) => {
+                                                                let _add = go("__add_stock").valueAsNumber;
+                                                    
+                                                    
+                                                                if (!np_validar(
+                                                                    isNaN(_add),
+                                                                    go("__add_stock"),
+                                                                    "_required",
+                                                                    "Debe de colocar un numero valido y mayor a 0"
+                                                                )) {
+            
+                                                                    let _amount = Number(this.state._stock.current.value)
+            
+                                                                    this.state._stock.current.value = (_add)
+                                                                    
+                                                                    _a.destroy()
+                                                                }
+                                                            }}>
+                                                                Establecer
+                                                            </Button>
+
+                                                        </>
+                                                    )
+                                                }
+                                            })
+                                        }}
+                                    
+                                    />
+                                )
+                            }
+                            <div className="_title">Precio del producto en Bs.</div>
+                            <input type="number" className="_input" min={0} onKeyDown={validarNumeroFloat} ref={this.state._price} placeholder="Precio en Bs."  title="Precio en Bs."/>
+                            <div className="_title">¿Este producto sera visible?</div>
                             <select defaultValue={1} ref={this.state._enable} className="_input" title="Estado del producto">
                                 <option value={0}>Desactivado</option>
                                 <option value={1}>Activado</option>
@@ -237,6 +348,8 @@ class ProductsPage extends Component {
 
                                         if (!error) {
                                             let data = this.get_formData();
+
+                                            data.id = undefined
 
                                             reqDB.query(reqDB.METHODS.create, "products", data).then(x=> {
                                                 if (np_validar(x.error, this.state._id.current, "_required", "El id de este producto ya esta siendo usado")) {
@@ -332,8 +445,15 @@ class ProductsPage extends Component {
                     <Table 
                     className="tab"
                     
-                    dataSource={filtro} 
-                    columns={columns}
+                    dataSource={filtro.map((x, i)=> {
+                        
+                        return ({
+                            ...x,
+                            enable: x.enable ?"Activado":"Desactivado",
+                            key: i
+                        })
+                    })} 
+                    columns={this.columns}
 
                     pagination={{
 

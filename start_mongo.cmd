@@ -4,6 +4,13 @@ setlocal
 :: Definir las rutas comunes donde MongoDB podría estar instalado
 set "USER_PATH=%LOCALAPPDATA%\MongoDB\bin\mongod.exe"
 set "SYSTEM_PATH=C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe"
+set "DB_PATH=C:\data\db"
+
+
+
+if not exist "%DB_PATH%" (
+    mkdir "%DB_PATH%"
+)
 
 :: Verificar si MongoDB está instalado a nivel de usuario
 if exist "%USER_PATH%" (
@@ -11,6 +18,7 @@ if exist "%USER_PATH%" (
     set MONGODB_PATH=%USER_PATH%
     goto RUN_MONGODB
 )
+
 
 :: Verificar si MongoDB está instalado a nivel de sistema
 
